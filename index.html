@@ -1,0 +1,4406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facturación PayPal · Fudo (Standalone)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --fudo-orange: #FF5023;
+    --fudo-orange-dark: #E03E14;
+    --fudo-orange-darker: #B8300D;
+    --fudo-orange-light: #FFF0EB;
+    --fudo-orange-tint: #FFC9BA;
+    --fudo-navy: #3938A0;
+    --lavender: #E1E1F5;
+    --text: #3B3B3B;
+    --border: rgba(57,56,160,0.12);
+    --success: #15803D;
+    --success-light: #DCFCE7;
+    --success-tint: #BBF7D0;
+    --danger: #DC2626;
+    --danger-light: #FEE2E2;
+    --warning: #F59E0B;
+    --warning-light: #FEF3C7;
+    --gray-50: #F8FAFC;
+    --gray-100: #F1F5F9;
+    --gray-200: #E2E8F0;
+    --gray-300: #CBD5E1;
+    --gray-400: #94A3B8;
+    --gray-500: #64748B;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1E293B;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --shadow: 0 2px 8px rgba(57,56,160,0.08);
+    --shadow-lg: 0 10px 32px rgba(57,56,160,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--lavender);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .banner {
+    background: var(--fudo-navy);
+    color: var(--lavender);
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+  .banner strong { color: var(--fudo-orange-tint); font-weight: 600; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  .hero { position: relative; overflow: hidden; background: var(--fudo-orange); border-radius: 12px; padding: 28px 30px; margin-bottom: 20px; }
+  .hero::before { content: ''; position: absolute; top: -50px; right: -30px; width: 170px; height: 170px; border-radius: 50%; background: rgba(255,255,255,0.14); }
+  .hero::after { content: ''; position: absolute; bottom: -55px; right: 90px; width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.10); }
+  .eyebrow { position: relative; display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--fudo-orange); background: #fff; border-radius: 20px; padding: 3px 10px; margin-bottom: 10px; }
+  .hero h1 { position: relative; font-size: 24px; font-weight: 800; margin: 0 0 6px; color: #fff; letter-spacing: -0.2px; }
+  .hero p { position: relative; font-size: 13.5px; color: #fff; opacity: .92; margin: 0; max-width: 640px; line-height: 1.5; }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--fudo-navy);
+    margin-bottom: 18px;
+    letter-spacing: -0.2px;
+  }
+  .btn {
+    padding: 11px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .btn-primary {
+    background: var(--fudo-orange);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(255,80,35,0.3);
+  }
+  .btn-primary:hover { background: var(--fudo-orange-dark); color: white; transform: translateY(-1px); }
+  .btn-primary:disabled { background: var(--gray-200); color: var(--gray-400); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-secondary {
+    background: white;
+    color: var(--fudo-navy);
+    border: 1.5px solid var(--gray-200);
+  }
+  .btn-secondary:hover { background: var(--gray-50); }
+  .btn-lg { padding: 14px 28px; font-size: 15px; }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .upload-zone {
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--gray-50);
+  }
+  .upload-zone:hover { border-color: var(--fudo-orange); background: var(--fudo-orange-light); }
+  .upload-zone.filled { border-style: solid; border-color: var(--fudo-orange); background: var(--fudo-orange-light); }
+  .upload-zone .ico { font-size: 28px; margin-bottom: 8px; }
+  .upload-zone .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .upload-zone .status {
+    font-size: 13px;
+    color: var(--fudo-navy);
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .upload-zone .size { font-size: 11px; color: var(--gray-500); margin-top: 2px; font-weight: 400; }
+  .upload-zone.filled .ico { color: var(--fudo-orange-dark); }
+  input[type=file] { display: none; }
+
+  #status {
+    display: none;
+    padding: 14px 20px;
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--fudo-navy);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    align-items: center;
+    gap: 10px;
+  }
+  #status.active { display: flex; }
+  #status.ok { background: var(--success-light); color: var(--success); border-color: var(--success-tint); }
+  #status.error { background: var(--danger-light); color: var(--danger); border-color: #FCA5A5; }
+
+  /* El spinner gira solo mientras carga/procesa; en listo/info/error se reemplaza por un ícono fijo */
+  .spin {
+    width: 18px; height: 18px;
+    border: 2.5px solid var(--fudo-orange-tint);
+    border-top-color: var(--fudo-orange);
+    border-radius: 50%;
+    animation: s 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  .ico-done {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--success);
+    color: #fff;
+    font-size: 11px; font-weight: 800; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #status.info .ico-done { background: var(--fudo-navy); }
+  #status.error .ico-done { background: var(--danger); }
+  @keyframes s { to { transform: rotate(360deg); } }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .stat-card .lbl {
+    font-size: 11px;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+  }
+  .stat-card .val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--fudo-navy);
+    margin-top: 4px;
+    letter-spacing: -0.4px;
+  }
+  .stat-card .val.ok { color: var(--success); }
+  .stat-card .val.danger { color: var(--danger); }
+  .stat-card .val.warn { color: var(--warning); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gray-100); }
+  th { background: var(--gray-50); color: var(--gray-600); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  tr.revisar { background: var(--danger-light); }
+  .chip {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .chip-regular { background: var(--gray-100); color: var(--gray-700); }
+  .chip-upgrade { background: #DBEAFE; color: #2563EB; }
+  .chip-migracion { background: #FCE7F3; color: #BE185D; }
+  .chip-ok { background: var(--success-light); color: var(--success); }
+  .chip-revisar { background: var(--danger-light); color: var(--danger); }
+  .money { font-family: "SF Mono", Menlo, monospace; text-align: right; font-weight: 600; }
+
+  #results { display: none; }
+  #results.active { display: block; }
+
+  .footer { text-align: center; color: var(--gray-400); font-size: 11px; margin-top: 32px; padding-bottom: 16px; }
+
+  /* Reglas */
+  .accordion-item {
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: all 0.15s;
+  }
+  .accordion-item:hover { border-color: var(--fudo-orange-tint); }
+  .accordion-item summary {
+    cursor: pointer;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--fudo-navy);
+    font-weight: 600;
+    font-size: 14px;
+    list-style: none;
+  }
+  .accordion-item summary::-webkit-details-marker { display: none; }
+  .accordion-item summary::after {
+    content: "+";
+    margin-left: auto;
+    color: var(--fudo-orange);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    transition: transform 0.2s;
+  }
+  .accordion-item[open] summary::after { content: "−"; }
+  .accordion-badge {
+    background: var(--fudo-orange-light);
+    color: var(--fudo-orange-darker);
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .accordion-content {
+    padding: 0 18px 18px 56px;
+    color: var(--gray-600);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .accordion-content strong { color: var(--fudo-navy); font-weight: 600; }
+  .accordion-content code {
+    background: var(--gray-100);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--fudo-orange-darker);
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .accordion-content ul { margin: 10px 0 0 20px; padding: 0; }
+  .accordion-content ul li { margin-bottom: 6px; }
+  .rule-highlight {
+    background: var(--fudo-orange-light);
+    border-left: 3px solid var(--fudo-orange);
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-top: 10px;
+    color: var(--fudo-orange-darker);
+    font-size: 12.5px;
+  }
+  details > summary.rules-head {
+    cursor: pointer;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+    user-select: none;
+  }
+  details > summary.rules-head::-webkit-details-marker { display: none; }
+  details > summary.rules-head::after {
+    content: "▾";
+    margin-left: auto;
+    color: var(--fudo-orange);
+    font-size: 14px;
+    transition: transform 0.2s;
+  }
+  details[open] > summary.rules-head::after { transform: rotate(180deg); }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <strong>Standalone v1</strong> · Procesador 100% browser (Pyodide) · Sin servidor · Doble click para abrir
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <span class="eyebrow">Fudo Others</span>
+    <h1>Facturación PayPal</h1>
+    <p>Procesador consolidado offline</p>
+  </div>
+
+  <div class="card">
+    <h2>1 · Cargar archivos del período</h2>
+    <div class="upload-grid">
+      <label class="upload-zone" id="zone-1">
+        <input type="file" id="file-1" accept=".csv">
+        <div class="ico">📄</div>
+        <div class="label">Extracto</div>
+        <div class="status">Click para seleccionar .csv</div>
+      </label>
+      <label class="upload-zone" id="zone-2">
+        <input type="file" id="file-2" accept=".csv,.xlsx">
+        <div class="ico">📊</div>
+        <div class="label">Historial de pagos</div>
+        <div class="status">Click para seleccionar .csv o .xlsx</div>
+      </label>
+      <label class="upload-zone" id="zone-3">
+        <input type="file" id="file-3" accept=".xlsx">
+        <div class="ico">🏷️</div>
+        <div class="label">Tabla de promociones</div>
+        <div class="status">Click para seleccionar .xlsx</div>
+      </label>
+    </div>
+    <p style="color:var(--gray-500); font-size:12px; margin-top:12px;">
+      El catálogo de productos ya viene cargado (11 productos). Para modificarlo, actualizá el archivo <code style="background:var(--gray-100); padding:2px 6px; border-radius:4px;">productos.xlsx</code> de referencia y rearmá el HTML.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2 · Procesar</h2>
+    <div id="status">
+      <div class="spin" id="status-ico"></div>
+      <div id="status-text">Cargando Python en el navegador... (solo la primera vez, ~10 MB desde CDN)</div>
+    </div>
+    <button id="btn-procesar" class="btn btn-primary btn-lg" disabled onclick="procesar()">
+      ▶ Procesar facturación
+    </button>
+    <button class="btn btn-secondary" onclick="resetAll()" style="margin-left:8px;">↻ Resetear</button>
+  </div>
+
+  <div id="results" class="card">
+    <h2>3 · Resultado</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="lbl">Facturas</div><div class="val" id="r-total">—</div></div>
+      <div class="stat-card"><div class="lbl">Facturado OK</div><div class="val ok" id="r-facturado">—</div></div>
+      <div class="stat-card"><div class="lbl">REVISAR</div><div class="val danger" id="r-revisar">—</div></div>
+      <div class="stat-card"><div class="lbl">Avisos control</div><div class="val warn" id="r-avisos">—</div></div>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="descargar()">⬇ Descargar XLSX</button>
+    <h2 style="margin-top:28px;">Facturas</h2>
+    <div style="max-height:420px; overflow-y:auto; border:1px solid var(--gray-200); border-radius:8px;">
+      <table id="t-facturas">
+        <thead><tr><th>#</th><th>Cliente</th><th>Ref PayPal</th><th>Tipo</th><th>Términos</th><th class="money">Importe</th><th>Estado</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <details class="card" style="padding:0; margin-top:28px;">
+    <summary class="rules-head">
+      <span style="font-size:15px; font-weight:700; color:var(--fudo-navy); letter-spacing:-0.2px;">
+        📏 Reglas del proceso
+      </span>
+      <span style="font-size:12px; color:var(--gray-500); font-weight:500; margin-left:8px;">
+        13 reglas vigentes · click para desplegar
+      </span>
+    </summary>
+    <div style="padding:0 24px 24px;">
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">1</span> Clasificación de pagos</summary>
+        <div class="accordion-content">
+          Cada cobro del extracto PayPal se cruza con el historial Dash y se clasifica según el campo <code>Acción</code> y <code>Dias cobrados del plan viejo</code>:
+          <ul>
+            <li><strong>Pago regular</strong> → Acción = "Pago regular" + días viejo = 0.</li>
+            <li><strong>Upgrade</strong> → Acción = "Cambio de plan". El cliente agregó un módulo o subió de plan.</li>
+            <li><strong>Migración de plan</strong> → Acción = "Pago regular" + días viejo &gt; 0. Se factura plan viejo + plan nuevo prorrateados.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">2</span> Descuentos por frecuencia</summary>
+        <div class="accordion-content">
+          Descuentos automáticos cuando no hay promo específica aplicada:
+          <ul>
+            <li><strong>Mensual</strong> → 0%</li>
+            <li><strong>Suscripción</strong> → 5%</li>
+            <li><strong>Semestral</strong> → 10%</li>
+            <li><strong>Anual</strong> → 15%</li>
+          </ul>
+          Si hay código de promoción cargado en la Tabla de promociones, se usa el descuento específico de esa fila (puede variar por componente).
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">3</span> Upgrades · Unificación Plan + Módulo</summary>
+        <div class="accordion-content">
+          Cuando en el mismo cobro el cliente hizo upgrade de <strong>Plan y Módulo</strong> simultáneamente, el término se unifica en una sola etiqueta <code>Upgrade Plan y Módulo - &lt;Frecuencia&gt;</code> aplicada a todas las líneas. Odoo requiere un único valor por factura.
+          <div class="rule-highlight">
+            Solo Plan → <code>Upgrade Plan - Mensual</code><br>
+            Solo Módulo → <code>Upgrade Módulo - Mensual</code><br>
+            Plan + Módulo → <code>Upgrade Plan y Módulo - Mensual</code>
+          </div>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">4</span> Migraciones · Descomposición de líneas</summary>
+        <div class="accordion-content">
+          Una migración factura <strong>cada componente</strong> por sus días correspondientes:
+          <ul>
+            <li><strong>Plan viejo</strong> → días del plan viejo (cobro proporcional).</li>
+            <li><strong>Plan nuevo</strong> → días del plan nuevo.</li>
+            <li><strong>Módulo compartido</strong> (en ambos planes) → suma de días viejo + nuevo.</li>
+            <li><strong>Módulo solo viejo o solo nuevo</strong> → días que corresponden.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">5</span> Suscripción implícita</summary>
+        <div class="accordion-content">
+          Si el ratio importe cobrado / bruto cae en <code>[0.93, 0.97]</code> (≈ 5% de descuento), el comportamiento varía por tipo de cobro:
+          <ul>
+            <li><strong>Upgrades</strong>: se aplica Suscripción automáticamente (el historial trae mal <code>Suscripción=No</code> por bug conocido).</li>
+            <li><strong>Regulares y Migraciones</strong>: NO se aplica automático. Si <code>Suscripción=No</code> y el importe cierra con 5%, se marca [REVISAR] + aviso para que el humano decida.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">6</span> Cuentas de Uruguay (-uy → -int)</summary>
+        <div class="accordion-content">
+          Los productos con sufijo <code>-uy</code> (cuentas de Uruguay) se mapean automáticamente al equivalente <code>-int</code> en el catálogo, porque los productos de Odoo están definidos solo con <code>-int</code>. Internamente el script busca <code>pro-uy</code> como <code>pro-int</code>, por ejemplo.
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">7</span> Códigos de promoción múltiples</summary>
+        <div class="accordion-content">
+          El campo <code>Nombre de la promociones</code> del historial puede traer varios códigos separados por coma. El lookup funciona en 2 pasos:
+          <ol style="margin:10px 0 0 20px;">
+            <li>Primero prueba el <strong>string completo</strong> en la Tabla (ej. <code>"PROMO_X, PROMO_Y"</code> como una entrada).</li>
+            <li>Si no matchea, lo divide por comas y busca cada código individual. Elige el que da mayor descuento para ese componente.</li>
+          </ol>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">8</span> Términos y condiciones (regulares)</summary>
+        <div class="accordion-content">
+          Formato automático según el período cubierto:
+          <ul>
+            <li><strong>Período en un solo mes</strong> → <code>Septiembre 2026</code></li>
+            <li><strong>Período Semestral</strong> → <code>Junio 2026 - Noviembre 2026</code></li>
+            <li><strong>Período Anual</strong> → <code>Junio 2026 - Mayo 2027</code></li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">9</span> Nota interna</summary>
+        <div class="accordion-content">
+          Formato: <code>&lt;PromoIndividual&gt;/&lt;ID Dash&gt;/&lt;Tipo&gt;/&lt;Letra frecuencia&gt;</code>. Letras: M=Mensual · R=Suscripción · T=Trimestral · S=Semestral · A=Anual. Para upgrades sin promo: <code>SP/&lt;ID&gt;/B/&lt;letra&gt;</code>.
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">10</span> Validaciones de control del historial</summary>
+        <div class="accordion-content">
+          El procesador corre 10 checks sobre el historial para detectar inconsistencias. No bloquean la facturación pero quedan en la hoja <strong>Avisos de control</strong> del XLSX:
+          <ul>
+            <li>Importe extracto ≠ Importe historial</li>
+            <li>Ratio importe/completo inconsistente con la frecuencia</li>
+            <li>Estado del pago ≠ "Aprobado"</li>
+            <li>Duplicados: misma ref PayPal 2+ veces</li>
+            <li>Fechas inconsistentes (inicio &gt; fin)</li>
+            <li>Frecuencia no reconocida</li>
+            <li>Días negativos o &gt; 400</li>
+            <li>Suscripción="Sí" con Frecuencia Trim/Sem/Anual</li>
+            <li>Migración con Plan viejo vacío</li>
+            <li>Componente desconocido no cargado en catálogo</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">11</span> Faltantes para Tabla</summary>
+        <div class="accordion-content">
+          Cuando aparece un código alfanumérico que no está en la Tabla de promociones, se agrega a la hoja <strong>Faltantes para Tabla</strong> del XLSX con: código, componente, frecuencia(s), veces que apareció y cliente ejemplo. Está ya en formato copy-paste para agregarlo al Drive compartido.
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">12</span> Planes activos y obsoletos</summary>
+        <div class="accordion-content">
+          <ul>
+            <li><strong>Planes activos para upgrades</strong>: solo <code>adv</code> y <code>pro</code>.</li>
+            <li><strong>Planes obsoletos</strong>: <code>ba</code>, <code>st</code>, <code>fu</code>, <code>ini</code>. Si aparecen como plan viejo o nuevo en un upgrade/migración → se marca [REVISAR] para análisis manual.</li>
+            <li><strong>Módulos válidos</strong>: dv, tbl, idvsls, top, kds, aih.</li>
+            <li><strong>Downgrades</strong> se ignoran si hay también upgrade. Si TODO es downgrade → [REVISAR].</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="accordion-item">
+        <summary><span class="accordion-badge">13</span> Constantes del output Odoo</summary>
+        <div class="accordion-content">
+          Valores fijos aplicados a todas las líneas del XLSX:
+          <ul>
+            <li><strong>Diario</strong>: <code>Comprobantes de exportación</code></li>
+            <li><strong>Tipo de Documento</strong>: <code>FACTURAS DE EXPORTACIÓN</code></li>
+            <li><strong>Moneda</strong>: USD</li>
+            <li><strong>Cuenta analítica</strong>: <code>{"6": 100}</code> (Inbound Otros Países, imputación 100%)</li>
+            <li><strong>Impuesto</strong>: IVA Exento</li>
+            <li><strong>Unidad de medida</strong>: Unidades</li>
+          </ul>
+        </div>
+      </details>
+
+    </div>
+  </details>
+
+  <div class="footer">
+    Pyodide · openpyxl · 100% offline después de la primera carga
+  </div>
+</div>
+
+<!-- Scripts Python embebidos (en text/plain para que el browser no los interprete) -->
+<script type="text/plain" id="py-facturacion">#!/usr/bin/env python3
+"""
+PayPal -> Odoo (facturacion de regulares)
+=========================================
+
+Toma los cobros de PayPal del periodo y arma el archivo XLSX de importacion
+de facturas a Odoo (Comprobantes de exportacion / USD), replicando la logica
+del armado manual.
+
+Fase 1: SOLO pagos regulares. Migraciones y upgrades quedan logueados y
+omitidos del archivo de salida.
+
+ESTRUCTURA DE CARPETAS ESPERADA (relativa a este script):
+
+    paypal_facturacion.py            <- este archivo
+    Generar_facturacion_PayPal.bat   <- doble click para correrlo
+    LEEME.txt
+    SPEC.md
+    entrada/
+        Extracto_PayPal.csv          <- salida del proyecto de extractos
+        Historial de pagos.xlsx      <- export de Dash
+        Tabla de promociones.xlsx    <- copia del archivo compartido
+    catalogo/
+        productos.xlsx               <- catalogo de productos Odoo
+        lineas.xlsx                  <- (opcional) overrides de planes
+    salida/
+        Importacion_facturas_<periodo>.xlsx
+
+Los archivos en entrada/ se identifican automaticamente por contenido,
+no por nombre. La spec completa esta en SPEC.md.
+"""
+
+from __future__ import annotations
+
+import csv
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import openpyxl
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
+
+# ---------------------------------------------------------------------------
+# Constantes
+# ---------------------------------------------------------------------------
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+ENTRADA_DIR = SCRIPT_DIR / "entrada"
+CATALOGO_DIR = SCRIPT_DIR / "catalogo"
+SALIDA_DIR = SCRIPT_DIR / "salida"
+
+SUFIJOS_VALIDOS = ("-int", "-uy")
+SUFIJOS_INVALIDOS = ("-ar", "-arg", "-br", "-cl", "-co", "-mx")
+
+FRECUENCIA_LETRA = {
+    "Mensual": "M",
+    "Suscripción": "R",
+    "Suscripcion": "R",
+    "Trimestral": "T",
+    "Semestral": "S",
+    "Anual": "A",
+}
+
+DESCUENTO_FALLBACK = {
+    "Mensual": (0, "B"),
+    "Suscripción": (5, "B"),
+    "Suscripcion": (5, "B"),
+    "Trimestral": (0, "B"),
+    "Semestral": (10, "B"),
+    "Anual": (15, "B"),
+}
+
+DIARIO = "Comprobantes de exportación"
+TIPO_DOCUMENTO = "FACTURAS DE EXPORTACIÓN"
+MONEDA = "USD"
+# A partir de la migracion de Odoo, la columna "Cuenta Analitica" se
+# importa como JSON: {"<ID cuenta>": <porcentaje>}. Para PayPal Others
+# todo el importe se imputa 100% a "Inbound Otros Paises" (ID 6).
+CUENTA_ANALITICA = '{"6": 100}'
+IMPUESTO = "IVA Exento"
+UNIDAD_MEDIDA = "Unidades"
+
+OUTPUT_HEADERS = [
+    "Orden",
+    "Contacto / Id. de la DB",
+    "Referencia",
+    "Fecha de Factura/Recibo",
+    "Fecha vencimiento",
+    "Referencia de pago",
+    "Términos y condiciones",
+    "Diario",
+    "Tipo de Documento",
+    "En",
+    "Plancito",
+    "Líneas de factura/Producto",
+    "Líneas de factura/Cuenta",
+    "Líneas de factura/Cuenta Analítica",
+    "Líneas de factura/Cantidad mínima",
+    "Líneas de factura/Impuestos",
+    "Líneas de factura/Precio unitario",
+    "Líneas de factura/Unidad de medida",
+    "Líneas de factura/ Descuento (%)",
+    "Líneas de factura/ Nota interna",
+    "Fecha inicio del servicio AFIP",
+    "Fecha Fin del Servicio AFIP",
+]
+
+MESES_ES = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+]
+
+
+# ---------------------------------------------------------------------------
+# Utilidades
+# ---------------------------------------------------------------------------
+
+def parse_es_number(value) -> float:
+    if value is None or value == "":
+        return 0.0
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).strip()
+    if not s:
+        return 0.0
+    return float(s.replace(".", "").replace(",", "."))
+
+
+def parse_es_date(value):
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value
+    s = str(value).strip()
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            pass
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        return None
+
+
+def es_codigo_numerico(valor) -> bool:
+    if valor is None or valor == "":
+        return True
+    if isinstance(valor, (int, float)):
+        return True
+    s = str(valor).strip()
+    if not s:
+        return True
+    try:
+        float(s.replace(",", "."))
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Deteccion de archivos en entrada/
+# ---------------------------------------------------------------------------
+
+def identificar_xlsx(path: Path) -> str:
+    try:
+        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            headers = [c.value for c in next(ws.iter_rows(max_row=1), [])]
+            headers_norm = [str(h).strip() if h else "" for h in headers]
+            if "ID pago externo" in headers_norm and "Acción" in headers_norm:
+                return "historial"
+            if any("Tipo" in h and "descuento" in h.lower() for h in headers_norm) and \
+               any("Plan" in h or "Módulo" in h or "Modulo" in h for h in headers_norm):
+                return "tabla_promociones"
+        return "desconocido"
+    except Exception as e:
+        print(f"WARN: no pude inspeccionar {path.name}: {e}")
+        return "desconocido"
+
+
+def identificar_csv(path: Path) -> str:
+    """Distingue entre extracto PayPal (delim ';') e historial Dash (delim ',' con metadata)."""
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as f:
+            head = f.read(4096)
+        if not head:
+            return "desconocido"
+        # El extracto PayPal usa ';' y tiene 'Fecha' en la primera linea.
+        primera_linea = head.splitlines()[0] if head.splitlines() else ""
+        if ";" in primera_linea and "," not in primera_linea.split(";")[0]:
+            return "extracto"
+        # Historial de Dash: arranca con "Estado del pago" y mas adelante contiene
+        # "ID pago externo" en el header de columnas.
+        if "ID pago externo" in head and "Acción" in head:
+            return "historial"
+        if head.lstrip().lower().startswith("estado del pago"):
+            return "historial"
+        # Default: si tiene ';' lo tratamos como extracto.
+        if ";" in primera_linea:
+            return "extracto"
+        return "desconocido"
+    except Exception as e:
+        print(f"WARN: no pude inspeccionar {path.name}: {e}")
+        return "desconocido"
+
+
+def encontrar_archivos_entrada():
+    if not ENTRADA_DIR.exists():
+        return None, None, None
+    extracto_path = None
+    historial_path = None
+    tabla_path = None
+
+    csvs = sorted(
+        (p for p in ENTRADA_DIR.iterdir() if p.is_file() and p.suffix.lower() == ".csv"),
+        key=lambda p: p.stat().st_mtime, reverse=True,
+    )
+    for p in csvs:
+        kind = identificar_csv(p)
+        if kind == "extracto" and extracto_path is None:
+            extracto_path = p
+        elif kind == "historial" and historial_path is None:
+            historial_path = p
+        if extracto_path and historial_path:
+            break
+
+    xlsxs = sorted(
+        (p for p in ENTRADA_DIR.iterdir()
+         if p.is_file() and p.suffix.lower() in (".xlsx", ".xlsm")),
+        key=lambda p: p.stat().st_mtime, reverse=True,
+    )
+    for p in xlsxs:
+        kind = identificar_xlsx(p)
+        if kind == "historial" and historial_path is None:
+            historial_path = p
+        elif kind == "tabla_promociones" and tabla_path is None:
+            tabla_path = p
+        if historial_path and tabla_path:
+            break
+
+    return extracto_path, historial_path, tabla_path
+
+
+# ---------------------------------------------------------------------------
+# Loaders
+# ---------------------------------------------------------------------------
+
+def load_extracto(path: Path) -> list[dict]:
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f, delimiter=";")
+        return list(reader)
+
+
+def _coerce_valor_historial(s: str):
+    """Convierte un string del CSV del Dash al tipo apropiado.
+
+    El Dash exporta numeros en notacion cientifica (ej '0.349e1' = 3.49) y
+    fechas como ISO 8601. Esta funcion intenta convertir a int/float si parece
+    numero, y deja el resto como string. Asi el resto del script ve los
+    mismos tipos que cuando viene de openpyxl.
+    """
+    if s is None:
+        return None
+    s = s.strip()
+    if s == "":
+        return None
+    # No tocar strings que claramente no son numero (tienen letras que no son e/E).
+    if any(ch.isalpha() and ch not in ("e", "E") for ch in s):
+        return s
+    try:
+        f = float(s)
+        if f.is_integer() and "e" not in s.lower() and "." not in s:
+            return int(f)
+        return f
+    except ValueError:
+        return s
+
+
+def load_historial_csv(path: Path) -> dict:
+    """Lee el historial de pagos descargado de Dash como CSV.
+
+    Estructura del archivo:
+      filas 0..4  -> metadata (clave,valor)
+      fila 5      -> en blanco
+      fila 6      -> headers de columnas
+      filas 7+    -> datos
+    """
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        reader = csv.reader(f)
+        rows = list(reader)
+
+    # Encontrar la fila de headers buscando "ID pago externo".
+    header_idx = None
+    for i, row in enumerate(rows):
+        if any((c or "").strip() == "ID pago externo" for c in row):
+            header_idx = i
+            break
+    if header_idx is None:
+        raise ValueError(f"No encontre fila de headers con 'ID pago externo' en {path.name}")
+
+    headers = [(c or "").strip() for c in rows[header_idx]]
+    col_idx = {h: i for i, h in enumerate(headers) if h}
+
+    if "ID pago externo" not in col_idx:
+        raise ValueError(f"Header 'ID pago externo' faltante en {path.name}")
+
+    out = {}
+    for row in rows[header_idx + 1:]:
+        if not row or all((c or "").strip() == "" for c in row):
+            continue
+        ref_raw = row[col_idx["ID pago externo"]] if col_idx["ID pago externo"] < len(row) else None
+        ref = (ref_raw or "").strip()
+        if not ref:
+            continue
+        rec = {}
+        for h, i in col_idx.items():
+            raw = row[i] if i < len(row) else None
+            rec[h] = _coerce_valor_historial(raw if raw is not None else "")
+        out[ref] = rec
+    return out
+
+
+def load_historial_xlsx(path: Path) -> dict:
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = None
+    for sheet_name in wb.sheetnames:
+        candidate = wb[sheet_name]
+        headers = [c.value for c in next(candidate.iter_rows(max_row=1), [])]
+        if "ID pago externo" in [str(h).strip() if h else "" for h in headers]:
+            ws = candidate
+            break
+    if ws is None:
+        raise ValueError(f"No encontre hoja con 'ID pago externo' en {path.name}")
+
+    headers = [str(c.value).strip() if c.value else "" for c in next(ws.iter_rows(max_row=1))]
+    col_idx = {h: i for i, h in enumerate(headers)}
+
+    out = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        ref = row[col_idx["ID pago externo"]] if "ID pago externo" in col_idx else None
+        if not ref:
+            continue
+        rec = {h: row[i] for h, i in col_idx.items() if i < len(row)}
+        out[str(ref).strip()] = rec
+    return out
+
+
+def load_historial(path: Path) -> dict:
+    """Carga el historial de pagos desde .xlsx o .csv (export de Dash)."""
+    ext = path.suffix.lower()
+    if ext == ".csv":
+        return load_historial_csv(path)
+    return load_historial_xlsx(path)
+
+
+def load_tabla_promociones(path: Path) -> dict:
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = None
+    for sheet_name in wb.sheetnames:
+        if sheet_name.strip().lower() == "tabla":
+            ws = wb[sheet_name]
+            break
+    if ws is None:
+        ws = wb.worksheets[0]
+
+    out = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not row or len(row) < 11:
+            continue
+        nombre_promo, plan_mod, promo_ind, fusion = row[0], row[1], row[2], row[3]
+        mens, susc, trim, sem, anu = row[4], row[5], row[6], row[7], row[8]
+        tipo_desc = row[9]
+        promo_ind_k = row[10] if len(row) > 10 else promo_ind
+
+        if not fusion:
+            continue
+        key = str(fusion).strip().upper()
+        out[key] = {
+            "nombre_promo": nombre_promo,
+            "plan_mod": plan_mod,
+            "promo_individual": promo_ind_k if promo_ind_k is not None else promo_ind,
+            "mensual": mens,
+            "suscripcion": susc,
+            "trimestral": trim,
+            "semestral": sem,
+            "anual": anu,
+            "tipo_descuento": tipo_desc,
+        }
+    return out
+
+
+def load_productos(path: Path) -> dict:
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = wb.worksheets[0]
+    headers = [str(c.value).strip() if c.value else "" for c in next(ws.iter_rows(max_row=1))]
+    col_idx = {h: i for i, h in enumerate(headers)}
+
+    requeridos = ["Referencia interna", "Nombre Odoo", "Valor diario", "Cuenta contable"]
+    for r in requeridos:
+        if r not in col_idx:
+            raise ValueError(f"Falta columna {r!r} en productos.xlsx")
+
+    out = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not row or row[col_idx["Referencia interna"]] is None:
+            continue
+        ref = str(row[col_idx["Referencia interna"]]).strip()
+        out[ref] = {
+            "nombre": row[col_idx["Nombre Odoo"]],
+            "valor_30d": row[col_idx.get("Valor 30d", -1)] if "Valor 30d" in col_idx else None,
+            "valor_diario": row[col_idx["Valor diario"]],
+            "impuesto": row[col_idx.get("Impuesto", -1)] if "Impuesto" in col_idx else IMPUESTO,
+            "cuenta_contable": row[col_idx["Cuenta contable"]],
+        }
+    return out
+
+
+def load_lineas_overrides(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    wb = openpyxl.load_workbook(path, data_only=True)
+    ws = wb.worksheets[0]
+    out = {}
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not row or row[0] is None:
+            continue
+        plan = str(row[0]).strip()
+        comps = [str(v).strip() for v in row[1:] if v is not None and str(v).strip()]
+        if plan and comps:
+            out[plan] = comps
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Logica de negocio
+# ---------------------------------------------------------------------------
+
+def filtrar_cobros_clientes(extracto_rows: list[dict]) -> tuple[list[dict], list[dict]]:
+    cobros = []
+    omitidos = []
+    for row in extracto_rows:
+        importe_raw = row.get("  Importe  ") or row.get("Importe") or "0"
+        importe = parse_es_number(importe_raw)
+        desc = (row.get("Descripción") or "").strip()
+        contacto = (row.get("Contacto") or "").strip()
+
+        if importe <= 0:
+            omitidos.append({**row, "_motivo": f"Importe <= 0 ({importe})"})
+            continue
+        if desc.lower().startswith("pago a"):
+            omitidos.append({**row, "_motivo": "Descripcion 'Pago a...'"})
+            continue
+        if "[REVISAR]" in contacto or "[REVISAR]" in desc:
+            omitidos.append({**row, "_motivo": "Marcado [REVISAR] en el extracto"})
+            continue
+
+        cobros.append(row)
+    return cobros, omitidos
+
+
+def determinar_frecuencia(historial_row: dict) -> str:
+    susc = historial_row.get("Suscripción")
+    if susc and str(susc).strip().lower() in ("sí", "si", "yes", "true"):
+        return "Suscripción"
+    freq = historial_row.get("Frecuencia") or "Mensual"
+    return str(freq).strip()
+
+
+def clasificar_tipo_pago(historial_row: dict) -> str:
+    """Clasifica el tipo de pago.
+
+    - 'Cambio de plan' -> upgrade
+    - 'Pago regular' + dias viejo > 0 -> migracion
+    - 'Pago regular' + dias viejo = 0 -> regular (aun si plan viejo tiene info)
+    """
+    accion = str(historial_row.get("Acción") or "").strip()
+    dias_viejo = historial_row.get("Dias cobrados del plan viejo") or 0
+    try:
+        dias_viejo = int(dias_viejo)
+    except (ValueError, TypeError):
+        dias_viejo = 0
+
+    if accion.lower() == "cambio de plan":
+        return "upgrade"
+    if accion.lower() == "pago regular":
+        if dias_viejo > 0:
+            return "migracion"
+        return "regular"
+    return "desconocido"
+
+
+def descomponer_plan(plan: str, overrides: dict) -> tuple[list[str], str, str | None]:
+    if not plan:
+        return [], "", "Plan vacio"
+    plan = str(plan).strip().lower()
+
+    if plan in overrides:
+        return overrides[plan], "-int", None
+
+    for suf in SUFIJOS_INVALIDOS:
+        if plan.endswith(suf):
+            return [], suf, f"Sufijo invalido {suf!r} (solo se procesan -int y -uy)"
+
+    sufijo = None
+    for suf in SUFIJOS_VALIDOS:
+        if plan.endswith(suf):
+            sufijo = suf
+            plan_sin_suf = plan[: -len(suf)]
+            break
+    else:
+        return [], "", f"Plan sin sufijo valido (esperado -int o -uy): {plan!r}"
+
+    componentes = [c for c in plan_sin_suf.split("-") if c]
+    if not componentes:
+        return [], sufijo, "No se pudieron extraer componentes del plan"
+    return componentes, sufijo, None
+
+
+_FREQ_FIELD_MAP = {
+    "Mensual": "mensual",
+    "Suscripción": "suscripcion",
+    "Suscripcion": "suscripcion",
+    "Trimestral": "trimestral",
+    "Semestral": "semestral",
+    "Anual": "anual",
+}
+
+
+def _lookup_codigo_tabla(codigo_str: str, componente_upper: str,
+                         frecuencia: str, tabla: dict):
+    """Busca UN codigo+componente en la Tabla y devuelve
+    (pct, tipo, promo_ind) si matchea, o None si no matchea.
+    """
+    key = (codigo_str + componente_upper).upper()
+    if key not in tabla:
+        return None
+    entry = tabla[key]
+    field = _FREQ_FIELD_MAP.get(frecuencia)
+    if field is None:
+        return None
+    pct = entry.get(field)
+    tipo = entry.get("tipo_descuento") or "A"
+    promo_ind = entry.get("promo_individual") or "SP"
+    if pct is None:
+        return None
+    return float(pct), str(tipo), str(promo_ind)
+
+
+def calcular_descuento(codigo_historial, componente: str, frecuencia: str,
+                       tabla: dict):
+    """Devuelve (pct, tipo, promo_ind, err_desc, faltante).
+
+    Soporta codigos MULTIPLES separados por coma (ej. cuando el historial
+    trae 'CAIDA_AIH_BONIF, CAIDA_DV_BONIF, CAIDA_KDS_BONIF'). Cada codigo se
+    busca en la Tabla para el componente; se elige el que da MAYOR
+    descuento (la promo mas especifica gana). Si ninguno matchea, se aplica
+    el comportamiento clasico: numerico -> fallback por frecuencia;
+    alfanumerico -> [REVISAR] y agregar a la hoja "Faltantes para Tabla".
+
+    `faltante` es None salvo cuando ninguno de los codigos alfanumericos
+    matchea el componente. En ese caso trae el/los codigos como string
+    original (con las comas) para no perder informacion en la hoja
+    "Faltantes para Tabla".
+    """
+    if codigo_historial is None:
+        codigo_str = ""
+    else:
+        codigo_str = str(codigo_historial).strip()
+    componente_upper = componente.strip().upper()
+
+    # Paso 1: probar el STRING COMPLETO tal cual (algunas promos estan
+    # cargadas en la Tabla con el string entero como clave, ej.
+    # "FPAGOS_TBL_50_6MESES, FPAGOS_IND_50_6MESES, FPAGOS_ADV_50_6MESES"
+    # como una unica entrada por componente).
+    res_full = _lookup_codigo_tabla(codigo_str, componente_upper, frecuencia, tabla)
+    if res_full is not None:
+        pct, tipo, promo_ind = res_full
+        return pct, tipo, promo_ind, None, None
+
+    # Paso 2: dividir en codigos individuales (separados por coma) y probar
+    # cada uno. Se usa cuando el historial trae multiples codigos que en la
+    # Tabla estan cargados por separado (ej. "CAIDA_AIH_BONIF, CAIDA_DV_BONIF").
+    codigos = [c.strip() for c in codigo_str.split(",") if c.strip()]
+    if len(codigos) > 1:
+        mejores = []  # (pct, tipo, promo_ind)
+        for c in codigos:
+            res = _lookup_codigo_tabla(c, componente_upper, frecuencia, tabla)
+            if res is not None:
+                mejores.append(res)
+        if mejores:
+            # Ordenar por pct DESC y elegir el mayor descuento.
+            mejores.sort(key=lambda x: x[0], reverse=True)
+            pct, tipo, promo_ind = mejores[0]
+            return pct, tipo, promo_ind, None, None
+
+    # Ningun codigo matcheo. Aplicar comportamiento clasico:
+    # - Si el codigo original es numerico o vacio -> fallback por frecuencia
+    # - Si es alfanumerico -> marcar faltante + REVISAR
+    if es_codigo_numerico(codigo_historial):
+        pct, tipo = DESCUENTO_FALLBACK.get(frecuencia, (0, "B"))
+        return pct, tipo, "SP", None, None
+    else:
+        err = (
+            f"Combinacion faltante en Tabla de promociones: "
+            f"{codigo_str!r} + {componente_upper!r}"
+        )
+        faltante = {
+            "codigo": codigo_str,
+            "componente": componente.strip().lower(),
+        }
+        return 0.0, "B", "SP", err, faltante
+
+
+def armar_nota_interna(promo_ind: str, id_dash, tipo_descuento: str,
+                       frecuencia: str) -> str:
+    id_str = str(id_dash) if id_dash is not None else ""
+    if isinstance(id_dash, float) and id_dash.is_integer():
+        id_str = str(int(id_dash))
+    freq_letra = FRECUENCIA_LETRA.get(frecuencia, "A")
+    return f"{promo_ind or 'SP'}/{id_str}/{tipo_descuento or 'B'}/{freq_letra}"
+
+
+# ---------------------------------------------------------------------------
+# Deteccion de Suscripcion implicita (pivot check)
+# ---------------------------------------------------------------------------
+
+SUSCRIPCION_MIN = 0.93
+SUSCRIPCION_MAX = 0.97
+
+
+def detectar_suscripcion_implicita(factura: dict, hist: dict):
+    """Detecta si el importe cobrado sugiere Suscripcion (5% descuento) pero
+    el historial NO la marca como tal (Suscripcion="No" y sin descuento en
+    "Porcentaje del descuento semestral / anual").
+
+    NO muta la factura. Devuelve un mensaje de aviso (string) para agregar
+    a los errores, o None si no aplica.
+
+    Se dispara cuando: Frecuencia Mensual + Suscripcion "No" + ratio
+    importe/calculo cae en [0.93, 0.97]. Es informativo: hay que revisar
+    manualmente si es un error del pago, del historial, o si realmente
+    aplica un 5% no declarado.
+    """
+    if not factura.get("lineas"):
+        return None
+    freq = determinar_frecuencia(hist)
+    if freq.lower() not in ("mensual",):
+        return None
+
+    # Solo si el historial dice explicitamente Suscripcion "No" y no hay
+    # descuento sem/anual cargado.
+    susc_raw = str(hist.get("Suscripción") or "").strip().lower()
+    if susc_raw in ("sí", "si", "yes", "true"):
+        return None
+    pct_sem_anual = parse_es_number(
+        hist.get("Porcentaje del descuento semestral / anual") or 0
+    )
+    if pct_sem_anual >= 5:
+        return None
+
+    lineas = factura["lineas"]
+    calc_actual = sum(
+        l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100.0)
+        for l in lineas
+    )
+    if calc_actual <= 0:
+        return None
+    importe = factura.get("importe_esperado", 0)
+    if importe <= 0:
+        return None
+    ratio = importe / calc_actual
+    if not (SUSCRIPCION_MIN <= ratio <= SUSCRIPCION_MAX):
+        return None
+
+    return (
+        f"Posible Suscripcion implicita: el importe cobrado (USD {importe:.2f}) "
+        f"cierra con 5% de descuento sobre el bruto (USD {calc_actual:.2f}), "
+        f"pero el historial marca Suscripcion='No' y sin descuento sem/anual. "
+        f"Revisar si es un error del pago o del historial."
+    )
+
+
+# Alias por compatibilidad: la funcion vieja aplicaba el descuento
+# automaticamente; la nueva version solo informa. Los llamadores deben
+# consumir el mensaje y agregarlo a los errores de la factura para marcarla
+# [REVISAR].
+def intentar_suscripcion_implicita(factura: dict, hist: dict, tabla: dict):
+    """DEPRECATED: usar detectar_suscripcion_implicita(factura, hist).
+    Se mantiene solo para no romper llamadores viejos; ahora es no-op y
+    devuelve False (nunca aplica cambios automaticos).
+    """
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Validaciones de control del historial
+# ---------------------------------------------------------------------------
+
+FRECUENCIAS_VALIDAS = {
+    "mensual", "suscripción", "suscripcion",
+    "trimestral", "semestral", "anual",
+}
+
+# Ratio esperado importe/importe_completo por frecuencia declarada.
+RATIO_ESPERADO = {
+    "suscripción": (0.94, 0.96),  # 5% desc
+    "suscripcion": (0.94, 0.96),
+    "trimestral":  (0.99, 1.01),  # sin desc por frecuencia
+    "semestral":   (0.89, 0.91),  # 10% desc
+    "anual":       (0.84, 0.86),  # 15% desc
+}
+
+
+def validar_control_historial(cobro: dict, hist: dict,
+                              tipo_pago: str = "") -> list[str]:
+    """Corre las validaciones de control sobre un cobro individual.
+
+    tipo_pago: "regular" | "upgrade" | "migracion". Se usa para saltar
+    checks que no aplican al tipo (ej. en upgrades el campo Suscripcion
+    del historial siempre viene mal por un bug, no chequear coherencia).
+
+    Devuelve lista de strings (avisos). Cada aviso arranca con el tipo
+    entre corchetes, ej. "[Importe] Extracto USD 42.75 != Historial USD 45.00".
+    Vacia si todo esta OK.
+    """
+    avisos = []
+
+    # Importe del extracto vs importe del historial
+    importe_ext = parse_es_number(
+        cobro.get("  Importe  ") or cobro.get("Importe") or 0
+    )
+    importe_hist = parse_es_number(hist.get("Importe") or 0)
+    importe_completo = parse_es_number(hist.get("Importe completo") or 0)
+
+    # #1 Importe extracto vs historial
+    if importe_ext > 0 and importe_hist > 0:
+        if abs(importe_ext - importe_hist) > 0.10:
+            avisos.append(
+                f"[Importe] Extracto USD {importe_ext:.2f} != Historial USD {importe_hist:.2f} "
+                f"(diferencia USD {importe_hist - importe_ext:+.2f})"
+            )
+
+    frecuencia = determinar_frecuencia(hist)
+    freq_lower = frecuencia.lower().strip()
+    susc_raw = str(hist.get("Suscripción") or "").strip().lower()
+    es_susc_declarada = susc_raw in ("sí", "si", "yes", "true")
+
+    # #2 Coherencia entre Suscripcion y Porcentaje del descuento sem/anual
+    # (aplica solo a regulares y migraciones; en upgrades el historial trae
+    # mal Suscripcion="No" por un bug conocido y se salta el check).
+    pct_sem_anual = parse_es_number(
+        hist.get("Porcentaje del descuento semestral / anual") or 0
+    )
+    if tipo_pago != "upgrade":
+        # Un cobro correcto de Suscripcion debe tener:
+        #   Suscripcion="Si"  AND  Porcentaje del descuento sem/anual = 5
+        if es_susc_declarada and pct_sem_anual != 5:
+            avisos.append(
+                f"[Suscripcion] Suscripcion='Si' pero Porcentaje del descuento "
+                f"sem/anual={pct_sem_anual} (esperado 5). Revisar historial."
+            )
+        if importe_hist > 0 and importe_completo > 0:
+            ratio = importe_hist / importe_completo
+            if (not es_susc_declarada and freq_lower == "mensual"
+                    and pct_sem_anual < 5 and 0.93 <= ratio <= 0.97):
+                avisos.append(
+                    f"[Suscripcion] Mensual con Suscripcion='No' pero ratio "
+                    f"importe/completo={ratio:.3f} (posible Suscripcion no declarada)"
+                )
+
+    # #3 Estado != Aprobado
+    estado = str(hist.get("Estado") or "").strip()
+    if estado and estado.lower() != "aprobado":
+        avisos.append(f"[Estado] Estado del pago = {estado!r} (no 'Aprobado')")
+
+    # #5 Fechas inconsistentes
+    ini = parse_es_date(hist.get("Inicio de período de pago"))
+    fin = parse_es_date(hist.get("Fin de período de pago"))
+    if ini and fin:
+        if ini > fin:
+            avisos.append(
+                f"[Fechas] Inicio de periodo ({ini.date()}) > Fin ({fin.date()})"
+            )
+    dias_nuevo = int(parse_es_number(hist.get("Dias cobrados del plan nuevo") or 0))
+    dias_viejo = int(parse_es_number(hist.get("Dias cobrados del plan viejo") or 0))
+
+    # #6 Frecuencia reconocida
+    if freq_lower and freq_lower not in FRECUENCIAS_VALIDAS:
+        avisos.append(f"[Frecuencia] Valor no reconocido: {frecuencia!r}")
+
+    # #7 Dias razonables
+    if dias_nuevo < 0:
+        avisos.append(f"[Dias] dias_plan_nuevo = {dias_nuevo} (negativo)")
+    if dias_nuevo > 400:
+        avisos.append(f"[Dias] dias_plan_nuevo = {dias_nuevo} (>400)")
+    if dias_viejo < 0:
+        avisos.append(f"[Dias] dias_plan_viejo = {dias_viejo} (negativo)")
+    if dias_viejo > 400:
+        avisos.append(f"[Dias] dias_plan_viejo = {dias_viejo} (>400)")
+
+    # #8 Suscripcion vs Frecuencia (combinacion rara)
+    if es_susc_declarada and freq_lower not in ("mensual", "suscripción", "suscripcion"):
+        avisos.append(
+            f"[Susc/Freq] Suscripcion='Si' con Frecuencia={frecuencia!r} "
+            f"(combinacion rara: Suscripcion suele ser Mensual)"
+        )
+
+    # #9 Migracion sin plan viejo cargado
+    accion = str(hist.get("Acción") or "").strip().lower()
+    plan_viejo_raw = str(hist.get("Plan viejo") or "").strip()
+    if accion == "pago regular" and dias_viejo > 0 and not plan_viejo_raw:
+        avisos.append(
+            f"[Migracion] Cobro tiene dias_plan_viejo={dias_viejo} pero "
+            f"Plan viejo esta vacio (deberia venir cargado en una migracion)"
+        )
+
+    return avisos
+
+
+def detectar_duplicados_extracto(cobros: list[dict]) -> dict:
+    """Detecta cobros duplicados en el extracto (misma referencia PayPal).
+
+    Devuelve dict {ref: [lista de cobros con esa ref]} solo para las refs
+    que aparecen 2 o mas veces.
+    """
+    from collections import defaultdict
+    por_ref = defaultdict(list)
+    for c in cobros:
+        ref = (c.get("Referencia") or c.get("Referencia ") or "").strip()
+        if ref:
+            por_ref[ref].append(c)
+    return {r: lst for r, lst in por_ref.items() if len(lst) > 1}
+
+
+def terminos_y_condiciones(inicio_periodo, fin_periodo,
+                           frecuencia: str = "", dias_plan_nuevo: int = 0,
+                           fecha_factura=None) -> str:
+    """Arma el texto 'Términos y condiciones' por factura.
+
+    Reglas (en orden de prioridad):
+      1. Si tengo inicio_periodo y fin_periodo del historial -> los uso.
+         - Mismo mes y año  -> "Mes Año"          (ej. "Junio 2026")
+         - Distinto         -> "Mes_i Año_i - Mes_f Año_f"
+           (ej. "Junio 2026 - Mayo 2027" para un pago anual)
+      2. Si faltan (caso defensivo, no esperado), deduzco la duracion
+         por (frecuencia, dias_plan_nuevo) y la aplico sobre fecha_factura.
+      3. Si tampoco hay fecha_factura, devuelvo string vacio.
+    """
+    def fmt_mes_anio(d):
+        return f"{MESES_ES[d.month - 1]} {d.year}"
+
+    if inicio_periodo is not None and fin_periodo is not None:
+        if (inicio_periodo.month == fin_periodo.month
+                and inicio_periodo.year == fin_periodo.year):
+            return fmt_mes_anio(inicio_periodo)
+        return f"{fmt_mes_anio(inicio_periodo)} - {fmt_mes_anio(fin_periodo)}"
+
+    # Fallback defensivo: deducir desde frecuencia + dias.
+    if fecha_factura is None:
+        return ""
+
+    freq = (frecuencia or "").strip().lower()
+    dias = int(dias_plan_nuevo or 0)
+    duracion_meses = {
+        "anual": 12,
+        "semestral": 6,
+        "trimestral": 3,
+    }.get(freq, 0)
+    if duracion_meses == 0 and dias > 31:
+        # No vino frecuencia clara pero dias largo -> aproximamos por dias.
+        if dias >= 300:
+            duracion_meses = 12
+        elif dias >= 150:
+            duracion_meses = 6
+        elif dias >= 75:
+            duracion_meses = 3
+
+    if duracion_meses <= 1:
+        return fmt_mes_anio(fecha_factura)
+
+    # Sumar duracion_meses-1 meses a fecha_factura para obtener mes fin.
+    m = fecha_factura.month + duracion_meses - 1
+    y = fecha_factura.year + (m - 1) // 12
+    m = ((m - 1) % 12) + 1
+    return (f"{MESES_ES[fecha_factura.month - 1]} {fecha_factura.year}"
+            f" - {MESES_ES[m - 1]} {y}")
+
+
+def armar_factura(cobro: dict, hist: dict, tabla: dict, productos: dict,
+                  overrides: dict) -> tuple[list[dict], list[str], list[dict]]:
+    """Devuelve (lineas, errores, faltantes).
+
+    `faltantes` es la lista de combinaciones (codigo, componente) que la
+    factura intento usar pero que no estan en la Tabla de promociones.
+    Cada item es {"codigo", "componente", "frecuencia"}.
+    """
+    errores = []
+    faltantes = []
+    plan = hist.get("Plan") or ""
+    componentes, sufijo, err_plan = descomponer_plan(plan, overrides)
+    if err_plan:
+        errores.append(f"Plan {plan!r}: {err_plan}")
+        return [], errores, faltantes
+
+    codigo_hist = hist.get("Nombre de la promociones")
+    id_dash = hist.get("ID de lacuenta") or hist.get("ID cuenta")
+    frecuencia = determinar_frecuencia(hist)
+
+    lineas = []
+    for componente in componentes:
+        plancito = f"{componente}-int"
+        prod = productos.get(plancito)
+        if prod is None:
+            errores.append(
+                f"Producto {plancito!r} no existe en catalogo/productos.xlsx"
+            )
+            lineas.append({
+                "componente": componente,
+                "plancito": plancito,
+                "producto": None,
+                "cuenta": None,
+                "precio_diario": 0.0,
+                "descuento_pct": 0.0,
+                "tipo_descuento": "B",
+                "promo_individual": "SP",
+                "nota_interna": armar_nota_interna("SP", id_dash, "B", frecuencia),
+                "dias": int(parse_es_number(hist.get("Dias cobrados del plan nuevo") or 30)),
+            })
+            continue
+
+        pct, tipo, promo_ind, err_desc, faltante = calcular_descuento(
+            codigo_hist, componente, frecuencia, tabla
+        )
+        if err_desc:
+            errores.append(err_desc)
+        if faltante is not None:
+            faltantes.append({**faltante, "frecuencia": frecuencia})
+
+        dias = int(parse_es_number(hist.get("Dias cobrados del plan nuevo") or 30))
+        nota = armar_nota_interna(promo_ind, id_dash, tipo, frecuencia)
+
+        lineas.append({
+            "componente": componente,
+            "plancito": plancito,
+            "producto": prod["nombre"],
+            "cuenta": prod["cuenta_contable"],
+            "precio_diario": float(prod["valor_diario"]),
+            "descuento_pct": float(pct),
+            "tipo_descuento": tipo,
+            "promo_individual": promo_ind,
+            "nota_interna": nota,
+            "dias": dias,
+        })
+
+    return lineas, errores, faltantes
+
+
+def validar_importe(lineas: list[dict], importe_esperado: float,
+                    tolerancia: float = 0.02) -> tuple[bool, float]:
+    total = 0.0
+    for l in lineas:
+        sub = l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100.0)
+        total += sub
+    return abs(total - importe_esperado) <= tolerancia, round(total, 2)
+
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+
+def escribir_xlsx(facturas: list[dict], path: Path,
+                  faltantes_tabla: list[dict] | None = None):
+    """Genera el XLSX final con la hoja 'Import'.
+    Las columnas de fecha (D, E, U, V) llevan formato 'd/m/yyyy'.
+    Las facturas con errores se pintan en rojo claro.
+
+    Si hay combinaciones (codigo + componente) que no estan en la Tabla
+    de promociones, se agrega una segunda hoja 'Faltantes para Tabla'
+    con esas combinaciones listas para pegar en la Tabla.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Import"
+
+    ws.append(OUTPUT_HEADERS)
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="305496")
+    for c in range(1, len(OUTPUT_HEADERS) + 1):
+        cell = ws.cell(1, c)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+    revisar_fill = PatternFill("solid", fgColor="F4CCCC")
+    fecha_fmt = "d/m/yyyy"
+    # 1-indexed: D=4, E=5, U=21, V=22
+    cols_fecha = (4, 5, 21, 22)
+
+    orden = 0
+    for f in facturas:
+        orden += 1
+        es_revisar = bool(f.get("errores"))
+        lineas = f["lineas"]
+        if not lineas:
+            continue
+
+        for i, linea in enumerate(lineas):
+            row_data = [None] * len(OUTPUT_HEADERS)
+            row_data[0] = orden
+
+            if i == 0:
+                row_data[1] = f["contacto"]
+                row_data[2] = f["referencia_cliente"]
+                row_data[3] = f["fecha_factura"]
+                row_data[4] = f["fecha_vencimiento"]
+                row_data[5] = f["referencia_pago"]
+                row_data[6] = f["terminos"]
+                row_data[7] = DIARIO
+                row_data[8] = TIPO_DOCUMENTO
+                row_data[9] = MONEDA
+                row_data[20] = f["inicio_servicio"]
+                row_data[21] = f["fin_servicio"]
+
+            row_data[10] = linea["plancito"]
+            row_data[11] = linea.get("producto") or ""
+            row_data[12] = linea.get("cuenta") or ""
+            row_data[13] = CUENTA_ANALITICA
+            row_data[14] = linea["dias"]
+            row_data[15] = IMPUESTO
+            row_data[16] = linea["precio_diario"]
+            row_data[17] = UNIDAD_MEDIDA
+            row_data[18] = linea["descuento_pct"]
+            row_data[19] = linea["nota_interna"]
+
+            ws.append(row_data)
+            row_idx = ws.max_row
+
+            # Aplicar formato fecha sobre las columnas de fecha
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+
+            if es_revisar:
+                for c in range(1, len(OUTPUT_HEADERS) + 1):
+                    ws.cell(row_idx, c).fill = revisar_fill
+
+    anchos = [8, 25, 25, 14, 14, 22, 16, 25, 22, 6, 15, 30, 30, 22, 8, 12, 14,
+              12, 10, 35, 14, 14]
+    for i, w in enumerate(anchos, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    ws.freeze_panes = "A2"
+
+    # Segunda hoja: combinaciones (codigo + componente) que faltan en la Tabla
+    if faltantes_tabla:
+        ws2 = wb.create_sheet("Faltantes para Tabla")
+
+        # Agrupar por (codigo, componente) -> set de frecuencias + ejemplos
+        agrupado: dict[tuple[str, str], dict] = {}
+        for item in faltantes_tabla:
+            codigo = (item.get("codigo") or "").strip()
+            componente = (item.get("componente") or "").strip().lower()
+            frecuencia = (item.get("frecuencia") or "").strip()
+            cliente = item.get("cliente") or ""
+            ref = item.get("ref") or ""
+            key = (codigo, componente)
+            if key not in agrupado:
+                agrupado[key] = {
+                    "codigo": codigo,
+                    "componente": componente,
+                    "frecuencias": set(),
+                    "veces": 0,
+                    "ejemplo_cliente": cliente,
+                    "ejemplo_ref": ref,
+                }
+            entry = agrupado[key]
+            entry["frecuencias"].add(frecuencia)
+            entry["veces"] += 1
+            if not entry["ejemplo_cliente"]:
+                entry["ejemplo_cliente"] = cliente
+                entry["ejemplo_ref"] = ref
+
+        headers2 = [
+            # Columnas que matchean la Tabla de promociones (para pegar):
+            "Nombredelapromociones(Historialdepagos)",
+            "Plan/Módulo",
+            "PromoIndividual",
+            "Fusión(A+B)",
+            "Mensual",
+            "Suscripción",
+            "Trimestral",
+            "Semestral",
+            "Anual",
+            "Tipodedescuento",
+            "PromoIndividual",
+            # Contexto extra (no es parte de la Tabla, solo para ver de donde viene):
+            "Frecuencia(s) vista(s)",
+            "Veces",
+            "Ejemplo cliente",
+            "Ejemplo Ref PayPal",
+        ]
+        ws2.append(headers2)
+        for c in range(1, len(headers2) + 1):
+            cell = ws2.cell(1, c)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+        # Separador visual entre columnas-Tabla y columnas-contexto
+        contexto_fill = PatternFill("solid", fgColor="EEEEEE")
+
+        filas_orden = sorted(
+            agrupado.values(),
+            key=lambda e: (e["codigo"], e["componente"]),
+        )
+        for entry in filas_orden:
+            codigo = entry["codigo"]
+            componente = entry["componente"]
+            fusion = (codigo + componente.upper()).upper()
+            frecs = ", ".join(sorted(entry["frecuencias"]))
+            row_data = [
+                codigo,                       # A - Nombredelapromociones
+                componente,                   # B - Plan/Módulo
+                None,                         # C - PromoIndividual (usuario completa)
+                fusion,                       # D - Fusión(A+B) precalculada
+                None,                         # E - Mensual
+                None,                         # F - Suscripción
+                None,                         # G - Trimestral
+                None,                         # H - Semestral
+                None,                         # I - Anual
+                None,                         # J - Tipodedescuento
+                None,                         # K - PromoIndividual (col duplicada)
+                frecs,                        # L - Frecuencia(s) vista(s)
+                entry["veces"],               # M - Veces
+                entry["ejemplo_cliente"],     # N - Ejemplo cliente
+                entry["ejemplo_ref"],         # O - Ejemplo Ref PayPal
+            ]
+            ws2.append(row_data)
+            r = ws2.max_row
+            # Pintar las columnas de contexto en gris para que el usuario
+            # vea claro que NO se pegan en la Tabla.
+            for c in range(12, len(headers2) + 1):
+                ws2.cell(r, c).fill = contexto_fill
+
+        anchos2 = [32, 18, 18, 26, 10, 12, 11, 11, 8, 16, 18, 22, 8, 28, 22]
+        for i, w in enumerate(anchos2, start=1):
+            ws2.column_dimensions[get_column_letter(i)].width = w
+        ws2.freeze_panes = "A2"
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(path)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main(argv) -> int:
+    print("=" * 70)
+    print(" PayPal -> Odoo - Facturacion de regulares")
+    print("=" * 70)
+    print()
+
+    if not ENTRADA_DIR.exists():
+        print("ERROR: No existe la carpeta 'entrada/'.")
+        print("       Creala junto al script y dejá adentro los 3 archivos:")
+        print("       1) Extracto_PayPal.csv")
+        print("       2) Historial de pagos (.xlsx o .csv, export de Dash)")
+        print("       3) Tabla de promociones.xlsx (copia del compartido)")
+        return 2
+
+    csv_path, historial_path, tabla_path = encontrar_archivos_entrada()
+    errores_iniciales = []
+    if csv_path is None:
+        errores_iniciales.append("- Extracto_PayPal.csv: no encontrado en entrada/")
+    if historial_path is None:
+        errores_iniciales.append(
+            "- Historial de pagos (.xlsx o .csv con 'ID pago externo'): no encontrado en entrada/"
+        )
+    if tabla_path is None:
+        errores_iniciales.append(
+            "- Tabla de promociones.xlsx: no encontrada en entrada/"
+        )
+
+    if errores_iniciales:
+        print("ERROR: Faltan archivos en 'entrada/':")
+        for e in errores_iniciales:
+            print(f"  {e}")
+        return 2
+
+    productos_path = CATALOGO_DIR / "productos.xlsx"
+    lineas_path = CATALOGO_DIR / "lineas.xlsx"
+    if not productos_path.exists():
+        print(f"ERROR: Falta {productos_path}")
+        return 2
+
+    print(f"Archivos detectados:")
+    print(f"  Extracto:   {csv_path.name}")
+    print(f"  Historial:  {historial_path.name}")
+    print(f"  Tabla:      {tabla_path.name}")
+    print(f"  Productos:  {productos_path.name}")
+    print(f"  Lineas:     {'(override) ' + lineas_path.name if lineas_path.exists() else '(sin overrides)'}")
+    print()
+
+    print("Cargando archivos...")
+    try:
+        extracto = load_extracto(csv_path)
+        historial = load_historial(historial_path)
+        tabla = load_tabla_promociones(tabla_path)
+        productos = load_productos(productos_path)
+        overrides = load_lineas_overrides(lineas_path) if lineas_path.exists() else {}
+    except Exception as e:
+        print(f"ERROR al cargar archivos: {e}")
+        import traceback
+        traceback.print_exc()
+        return 3
+
+    print(f"  Extracto:   {len(extracto)} filas")
+    print(f"  Historial:  {len(historial)} cobros")
+    print(f"  Tabla:      {len(tabla)} combinaciones de promocion")
+    print(f"  Productos:  {len(productos)} productos")
+    print()
+
+    cobros, omitidos = filtrar_cobros_clientes(extracto)
+    print(f"Cobros del extracto:           {len(extracto)}")
+    print(f"  Pagos de clientes:           {len(cobros)}")
+    print(f"  Omitidos (no facturables):   {len(omitidos)}")
+
+    facturas = []
+    omitidas_por_tipo = {"migracion": [], "upgrade": [], "desconocido": []}
+    sin_historial = []
+    faltantes_tabla = []  # combinaciones codigo+componente que faltan en la Tabla
+    avisos_consistencia = []  # warnings de inconsistencias frecuencia vs dias_plan_nuevo
+
+    for cobro in cobros:
+        ref = (cobro.get("Referencia") or cobro.get("Referencia ") or "").strip()
+        importe_extracto = parse_es_number(
+            cobro.get("  Importe  ") or cobro.get("Importe")
+        )
+        fecha_cobro = parse_es_date(cobro.get("Fecha"))
+        contacto = (cobro.get("Contacto") or "").strip()
+        descripcion = (cobro.get("Descripción") or "").strip()
+
+        hist = historial.get(ref)
+        if hist is None:
+            sin_historial.append({"ref": ref, "contacto": contacto, "importe": importe_extracto})
+            continue
+
+        tipo = clasificar_tipo_pago(hist)
+        if tipo != "regular":
+            omitidas_por_tipo[tipo].append({"ref": ref, "contacto": contacto})
+            continue
+
+        lineas, errores, faltantes_fac = armar_factura(
+            cobro, hist, tabla, productos, overrides
+        )
+        for f in faltantes_fac:
+            faltantes_tabla.append({
+                **f,
+                "cliente": contacto,
+                "ref": ref,
+            })
+
+        ok_importe, total_calc = validar_importe(lineas, importe_extracto)
+        if not ok_importe and lineas:
+            errores.append(
+                f"Descuadre de importe: esperado USD {importe_extracto:.2f}, "
+                f"calculado USD {total_calc:.2f} "
+                f"(diferencia USD {total_calc - importe_extracto:+.2f})"
+            )
+            # Si el descuadre es coherente con un 5% de Suscripcion no
+            # declarada en historial, agregar aviso informativo (no aplica
+            # automaticamente el descuento).
+            factura_temp = {"lineas": lineas, "importe_esperado": importe_extracto}
+            aviso_susc = detectar_suscripcion_implicita(factura_temp, hist)
+            if aviso_susc:
+                errores.append(aviso_susc)
+
+        inicio_periodo = parse_es_date(hist.get("Inicio de período de pago"))
+        fin_periodo = parse_es_date(hist.get("Fin de período de pago"))
+        frecuencia = determinar_frecuencia(hist)
+        dias_plan_nuevo = int(parse_es_number(
+            hist.get("Dias cobrados del plan nuevo") or 0
+        ))
+
+        terminos = terminos_y_condiciones(
+            inicio_periodo, fin_periodo,
+            frecuencia=frecuencia,
+            dias_plan_nuevo=dias_plan_nuevo,
+            fecha_factura=fecha_cobro,
+        )
+
+        # Validacion cruzada: frecuencia vs dias_plan_nuevo. No marca REVISAR,
+        # solo loguea aviso al final por si hay un desfasaje en el historial.
+        freq_lower = (frecuencia or "").strip().lower()
+        inconsistencia = None
+        if freq_lower in ("mensual", "suscripción", "suscripcion"):
+            if dias_plan_nuevo > 31:
+                inconsistencia = (
+                    f"Frecuencia '{frecuencia}' pero dias_plan_nuevo={dias_plan_nuevo} (>31). "
+                    f"Periodo cubierto: {inicio_periodo.date() if inicio_periodo else '?'} "
+                    f"a {fin_periodo.date() if fin_periodo else '?'}"
+                )
+        elif freq_lower == "trimestral" and not (75 <= dias_plan_nuevo <= 95):
+            inconsistencia = (
+                f"Frecuencia 'Trimestral' pero dias_plan_nuevo={dias_plan_nuevo} (esperado ~90)"
+            )
+        elif freq_lower == "semestral" and not (165 <= dias_plan_nuevo <= 195):
+            inconsistencia = (
+                f"Frecuencia 'Semestral' pero dias_plan_nuevo={dias_plan_nuevo} (esperado ~180)"
+            )
+        elif freq_lower == "anual" and not (350 <= dias_plan_nuevo <= 370):
+            inconsistencia = (
+                f"Frecuencia 'Anual' pero dias_plan_nuevo={dias_plan_nuevo} (esperado ~360)"
+            )
+        if inconsistencia:
+            avisos_consistencia.append({
+                "ref": ref, "contacto": contacto, "motivo": inconsistencia,
+            })
+
+        facturas.append({
+            "contacto": contacto,
+            "referencia_cliente": descripcion,
+            "fecha_factura": fecha_cobro,
+            "fecha_vencimiento": fecha_cobro,
+            "referencia_pago": ref,
+            "terminos": terminos,
+            "inicio_servicio": inicio_periodo,
+            "fin_servicio": fin_periodo,
+            "lineas": lineas,
+            "errores": errores,
+            "importe_esperado": importe_extracto,
+            "total_calculado": total_calc,
+        })
+
+    # Nombre del archivo: usamos el mes/año mas comun de las fechas de cobro
+    # (representa el run de facturacion, ej. "Junio_2026").
+    if facturas:
+        from collections import Counter
+        meses = Counter(
+            (f["fecha_factura"].month, f["fecha_factura"].year)
+            for f in facturas if f["fecha_factura"] is not None
+        )
+        if meses:
+            (mes, anio), _ = meses.most_common(1)[0]
+            nombre_periodo = f"{MESES_ES[mes - 1]}_{anio}"
+        else:
+            nombre_periodo = "sin_periodo"
+        nombre_archivo = f"Importacion_facturas_{nombre_periodo}.xlsx"
+    else:
+        nombre_archivo = "Importacion_facturas.xlsx"
+    salida = SALIDA_DIR / nombre_archivo
+
+    if salida.exists():
+        try:
+            with open(salida, "a"):
+                pass
+        except PermissionError:
+            print(f"ERROR: No puedo sobrescribir {salida.name}.")
+            print(f"       El archivo esta abierto en Excel. Cerralo y volve a correr.")
+            return 3
+
+    SALIDA_DIR.mkdir(parents=True, exist_ok=True)
+    escribir_xlsx(facturas, salida, faltantes_tabla=faltantes_tabla)
+
+    print()
+    print(f"Clasificacion de pagos:")
+    print(f"  Pago regular:                {len(facturas)}")
+    print(f"  Migracion (omitido fase 1):  {len(omitidas_por_tipo['migracion'])}")
+    print(f"  Upgrade (omitido fase 1):    {len(omitidas_por_tipo['upgrade'])}")
+    print(f"  Desconocido:                 {len(omitidas_por_tipo['desconocido'])}")
+    print(f"  Sin match en historial:      {len(sin_historial)}")
+    print()
+
+    revisar = [f for f in facturas if f["errores"]]
+    ok = [f for f in facturas if not f["errores"]]
+    total_facturado = sum(
+        sum(l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100)
+            for l in f["lineas"])
+        for f in ok
+    )
+    total_revisar = sum(f["importe_esperado"] for f in revisar)
+
+    print(f"Facturas OK:                   {len(ok)}")
+    print(f"Facturas con [REVISAR]:        {len(revisar)}")
+    print()
+    print(f"Total facturado OK:            USD {total_facturado:10.2f}")
+    print(f"Total en [REVISAR]:            USD {total_revisar:10.2f}")
+    print()
+    print("=" * 70)
+    print(f"OK Generado: salida/{nombre_archivo}")
+    print("=" * 70)
+
+    if sin_historial:
+        print()
+        print(f"AVISO: {len(sin_historial)} cobro(s) SIN MATCH en Historial de pagos:")
+        for s in sin_historial:
+            print(f"    - Ref {s['ref']} | {s['contacto']} | USD {s['importe']:.2f}")
+
+    if omitidas_por_tipo["migracion"]:
+        print()
+        print(f"INFO: {len(omitidas_por_tipo['migracion'])} migracion(es) omitida(s) (Fase 2):")
+        for m in omitidas_por_tipo["migracion"]:
+            print(f"    - Ref {m['ref']} | {m['contacto']}")
+
+    if omitidas_por_tipo["upgrade"]:
+        print()
+        print(f"INFO: {len(omitidas_por_tipo['upgrade'])} upgrade(s) omitido(s) (Fase 2):")
+        for u in omitidas_por_tipo["upgrade"]:
+            print(f"    - Ref {u['ref']} | {u['contacto']}")
+
+    if faltantes_tabla:
+        combos_unicos = set()
+        for f in faltantes_tabla:
+            combos_unicos.add((
+                (f.get("codigo") or "").strip(),
+                (f.get("componente") or "").strip().lower(),
+            ))
+        print()
+        print(f"INFO: {len(combos_unicos)} combinacion(es) de codigo+componente NO estan")
+        print(f"      en la Tabla de promociones. Ver hoja 'Faltantes para Tabla'")
+        print(f"      en el archivo de salida para copiarlas y agregarlas a la Tabla.")
+
+    if avisos_consistencia:
+        print()
+        print(f"AVISO: {len(avisos_consistencia)} factura(s) con inconsistencia entre")
+        print(f"       'Frecuencia' y 'Dias cobrados del plan nuevo' del historial")
+        print(f"       (no marca [REVISAR], pero conviene chequear):")
+        for a in avisos_consistencia:
+            print(f"    - Ref {a['ref']} | {a['contacto']}")
+            print(f"      {a['motivo']}")
+
+    if revisar:
+        print()
+        print("=" * 70)
+        print(f"ATENCION - {len(revisar)} factura(s) marcada(s) como [REVISAR] (pintada(s) en rojo):")
+        print("=" * 70)
+        for f in revisar:
+            print(f"\n  Cliente: {f['contacto']}  |  Ref: {f['referencia_pago']}  |  USD {f['importe_esperado']:.2f}")
+            for err in f["errores"]:
+                print(f"    - {err}")
+        print()
+        print("Revisalas, ajusta los inputs (Tabla de promociones, productos, etc.)")
+        print("y volve a correr; o eliminalas a mano antes de subir el archivo a Odoo.")
+    else:
+        print()
+        print("PERFECTO! No se detectaron problemas. El archivo esta listo para subir a Odoo.")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+</script>
+<script type="text/plain" id="py-upgrades">#!/usr/bin/env python3
+"""
+PayPal -> Odoo (facturacion de upgrades) - Fase 2
+==================================================
+
+Toma los cobros de PayPal clasificados como upgrade (Accion="Cambio de plan"
+en el historial + dias_cobrados_plan_viejo = 0) y arma el XLSX de importacion
+a Odoo. La estructura de la hoja Import es identica a la de regulares.
+
+Diferencia clave con regulares: cada upgrade se descompone en filas por
+componente que subio (plan y/o modulos), no en linea por componente del plan
+completo. Cada linea lleva:
+    - Plancito: el componente que se factura (ej. tbl-int, pro-int)
+    - Precio unitario: diario del componente, o (diario_nuevo - diario_viejo)
+      si es un upgrade de plan
+    - Cantidad minima: dias plan nuevo del historial
+    - Descuento (%): por frecuencia (Mensual 0, Susc 5, Sem 10, Anual 15)
+    - Terminos: "Upgrade <Modulo|Plan> - <Frecuencia_larga>"
+    - Nota interna: "SP/<ID Dash>/B/<letra freq>"
+    - Fechas AFIP: Inicio y Fin de periodo de pago del historial
+
+Reglas de descomposicion:
+    - Planes validos para upgrade: solo adv < pro.
+      ba/st/fu/ini/otros -> [REVISAR].
+    - Modulos validos: los cargados en catalogo/productos.xlsx.
+      Otros -> [REVISAR].
+    - Sufijos: -int y -uy. Otros -> [REVISAR].
+    - Downgrades (plan baja o modulo se quita) se ignoran silenciosamente.
+    - Si TODO el cambio es downgrade -> [REVISAR] y listar.
+
+Deteccion de Suscripcion:
+    - Agrupar filas por Referencia PayPal.
+    - Si Frecuencia = Mensual/Suscripcion y ratio importe/bruto ∈ [0.93, 0.97]
+      -> Suscripcion (5% de descuento en todas las lineas del cobro).
+
+USO:
+    Doble click en Generar_upgrades_PayPal.bat, o desde consola:
+        python paypal_upgrades.py
+
+Los archivos de entrada son los mismos que para regulares (entrada/):
+    Extracto_PayPal.csv, Historial de pagos (.xlsx o .csv), y opcionalmente
+    Tabla de promociones. El script reusa toda la infra del script de
+    regulares (paypal_facturacion.py).
+"""
+
+from __future__ import annotations
+
+import sys
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+
+import openpyxl
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
+# Reutilizamos toda la infra del script de regulares.
+import paypal_facturacion as pf
+
+
+# ---------------------------------------------------------------------------
+# Constantes especificas de upgrades
+# ---------------------------------------------------------------------------
+
+# Ranking de planes (solo adv y pro cuentan como upgrade valido).
+PLAN_RANK = {"adv": 1, "pro": 2}
+# Planes que estan en el catalogo pero se consideran obsoletos: si aparecen
+# como plan viejo o nuevo, la factura se marca [REVISAR].
+PLANES_OBSOLETOS = ("ba", "st", "fu", "ini")
+
+# Sufijos validos (los mismos que en regulares).
+SUFIJOS_VALIDOS = pf.SUFIJOS_VALIDOS  # ("-int", "-uy")
+SUFIJOS_INVALIDOS = pf.SUFIJOS_INVALIDOS
+
+# Detección de Suscripción (pivot check por Referencia).
+SUSCRIPCION_MIN = 0.93
+SUSCRIPCION_MAX = 0.97
+
+# Descuento por frecuencia para upgrades.
+DESCUENTO_UPGRADE = {
+    "mensual": 0,
+    "suscripción": 5,
+    "suscripcion": 5,
+    "trimestral": 0,     # (segun LLC quedaba en 0 para revisar a mano)
+    "semestral": 10,
+    "anual": 15,
+}
+
+# Etiqueta de frecuencia larga en los "Terminos y condiciones".
+# Suscripcion y Mensual se rotulan igual ("Mensual").
+FRECUENCIA_LARGA = {
+    "mensual": "Mensual",
+    "suscripción": "Mensual",
+    "suscripcion": "Mensual",
+    "trimestral": "Trimestral",
+    "semestral": "Semestral",
+    "anual": "Anual",
+}
+
+
+# ---------------------------------------------------------------------------
+# Parsing de planes
+# ---------------------------------------------------------------------------
+
+def parse_plan_code(codigo, modulos_validos: set):
+    """Descompone un codigo de plan.
+
+    Ej. 'pro-tbl-aih-int' -> ('pro', {'tbl','aih'}, '-int', None)
+        'adv-uy'          -> ('adv', set(), '-uy', None)
+        'ninguno'         -> (None, set(), None, None)
+        'pro-XXX-int'     -> (None, set(), None, 'componente desconocido XXX')
+
+    Retorna (plan, modulos, sufijo, error).
+    Si hay algun componente que no reconocemos, devuelve error != None.
+    """
+    if codigo is None:
+        return None, set(), None, None
+    s = str(codigo).strip().lower()
+    if s in ("", "ninguno", "none", "0"):
+        return None, set(), None, None
+
+    # Detectar sufijo de pais.
+    sufijo = None
+    for suf in SUFIJOS_VALIDOS:
+        if s.endswith(suf):
+            sufijo = suf
+            break
+    if sufijo is None:
+        for suf in SUFIJOS_INVALIDOS:
+            if s.endswith(suf):
+                return None, set(), None, f"Sufijo invalido {suf!r} en {s!r}"
+        return None, set(), None, f"Sufijo desconocido en {s!r}"
+
+    partes = s[: -len(sufijo)].split("-")
+    partes = [p for p in partes if p]
+
+    plan = None
+    modulos = set()
+    for p in partes:
+        if p in PLAN_RANK:
+            if plan is not None:
+                return None, set(), None, f"Dos planes en {s!r}: {plan!r} y {p!r}"
+            plan = p
+        elif p in PLANES_OBSOLETOS:
+            # Plan obsoleto (ba/st/fu/ini): lo dejamos pasar como "plan" pero
+            # marcamos error para que la factura vaya a [REVISAR].
+            return None, set(), None, (
+                f"Plan obsoleto {p!r} en {s!r} - revisar caso a caso"
+            )
+        elif p in modulos_validos:
+            modulos.add(p)
+        else:
+            return None, set(), None, f"Componente desconocido {p!r} en {s!r}"
+    return plan, modulos, sufijo, None
+
+
+def descomponer_upgrade(plan_nuevo_raw, plan_viejo_raw, modulos_validos):
+    """Compara Plan Nuevo vs Plan Viejo y devuelve las filas de upgrade.
+
+    Retorna (filas, errores, todo_downgrade).
+        filas: lista de tuplas (componente, tipo) donde
+            componente: 'pro-int', 'tbl-int', etc.
+            tipo: 'Plan' o 'Modulo'
+        errores: lista de strings con problemas de parseo/validacion
+        todo_downgrade: True si el cambio fue puramente downgrade (sin nada
+                        para facturar).
+    """
+    errores = []
+    filas = []
+
+    nuevo_plan, nuevo_mods, sufijo_n, err_n = parse_plan_code(
+        plan_nuevo_raw, modulos_validos
+    )
+    if err_n:
+        errores.append(f"Plan nuevo {plan_nuevo_raw!r}: {err_n}")
+    viejo_plan, viejo_mods, sufijo_v, err_v = parse_plan_code(
+        plan_viejo_raw, modulos_validos
+    )
+    if err_v:
+        errores.append(f"Plan viejo {plan_viejo_raw!r}: {err_v}")
+
+    if errores:
+        return filas, errores, False
+
+    if sufijo_n is None:
+        errores.append(f"Plan nuevo {plan_nuevo_raw!r}: sin sufijo -int/-uy")
+        return filas, errores, False
+
+    # Si viejo tiene sufijo distinto al nuevo, avisamos pero seguimos con el nuevo.
+    if sufijo_v is not None and sufijo_v != sufijo_n:
+        errores.append(
+            f"Sufijos distintos: nuevo {sufijo_n!r} vs viejo {sufijo_v!r}"
+        )
+
+    # NOTA: para el lookup en catalogo/productos.xlsx siempre usamos "-int"
+    # (los productos de Uruguay no existen como -uy en el catalogo, se
+    # facturan con el codigo -int igual que los internacionales).
+    sufijo_catalogo = "-int"
+
+    # Upgrade de plan
+    nivel_n = PLAN_RANK.get(nuevo_plan, 0) if nuevo_plan else 0
+    nivel_v = PLAN_RANK.get(viejo_plan, 0) if viejo_plan else 0
+    hubo_upgrade_plan = False
+    hubo_downgrade_plan = False
+    if nuevo_plan and nivel_n > nivel_v:
+        filas.append((f"{nuevo_plan}{sufijo_catalogo}", "Plan",
+                      f"{viejo_plan}{sufijo_catalogo}" if viejo_plan else None))
+        hubo_upgrade_plan = True
+    elif viejo_plan and nivel_v > nivel_n:
+        hubo_downgrade_plan = True
+
+    # Upgrade de modulo(s): los que estan en nuevo y no en viejo.
+    mods_agregados = sorted(nuevo_mods - viejo_mods)
+    mods_removidos = sorted(viejo_mods - nuevo_mods)
+    for mod in mods_agregados:
+        filas.append((f"{mod}{sufijo_catalogo}", "Modulo", None))
+
+    # Todo downgrade: no hay ni upgrade de plan ni modulos agregados,
+    # pero SI hubo downgrade de plan o modulos removidos.
+    todo_downgrade = (
+        not filas and (hubo_downgrade_plan or bool(mods_removidos))
+    )
+    return filas, errores, todo_downgrade
+
+
+# ---------------------------------------------------------------------------
+# Descuento
+# ---------------------------------------------------------------------------
+
+def descuento_por_frecuencia(frecuencia: str) -> int:
+    return DESCUENTO_UPGRADE.get((frecuencia or "").strip().lower(), 0)
+
+
+def terminos_upgrade(tipo: str, frecuencia: str) -> str:
+    """Ej: 'Upgrade Modulo - Mensual', 'Upgrade Plan - Semestral'.
+
+    tipo: 'Plan' o 'Modulo'.
+    frecuencia: valor del historial ('Mensual', 'Suscripción', 'Semestral', ...).
+    """
+    freq_larga = FRECUENCIA_LARGA.get((frecuencia or "").strip().lower(), "Mensual")
+    # 'Modulo' sin tilde, siguiendo el ejemplo del template.
+    tipo_str = "Módulo" if tipo.lower().startswith("mod") else "Plan"
+    return f"Upgrade {tipo_str} - {freq_larga}"
+
+
+def nota_upgrade(id_dash, frecuencia: str, tipo_descuento: str = "B") -> str:
+    """Formato: SP/<ID Dash>/B/<letra freq>."""
+    letra = pf.FRECUENCIA_LETRA.get((frecuencia or "").strip().capitalize(), "M")
+    id_str = ""
+    if id_dash is not None:
+        if isinstance(id_dash, float) and id_dash.is_integer():
+            id_str = str(int(id_dash))
+        else:
+            id_str = str(id_dash).strip()
+    return f"SP/{id_str}/{tipo_descuento}/{letra}"
+
+
+# ---------------------------------------------------------------------------
+# Armado de facturas
+# ---------------------------------------------------------------------------
+
+def armar_factura_upgrade(cobro: dict, hist: dict, productos: dict,
+                          modulos_validos: set) -> tuple[list[dict], list[str]]:
+    """Arma las lineas de factura de un upgrade.
+
+    Cada linea es un dict listo para escribir en el XLSX. Si hay problemas,
+    devuelve `errores != []` y la factura se marca [REVISAR].
+    """
+    errores = []
+    plan_nuevo = hist.get("Plan") or ""
+    plan_viejo = hist.get("Plan viejo") or ""
+    frecuencia = pf.determinar_frecuencia(hist)
+    dias = int(pf.parse_es_number(hist.get("Dias cobrados del plan nuevo") or 0))
+    id_dash = hist.get("ID de lacuenta") or hist.get("ID cuenta")
+
+    # Excepciones que van a [REVISAR] (segun instruccion del usuario).
+    if dias <= 0:
+        errores.append(f"Dias plan nuevo = {dias} (no aplica al periodo)")
+    importe_extracto = pf.parse_es_number(
+        cobro.get("  Importe  ") or cobro.get("Importe") or 0
+    )
+    if importe_extracto <= 0:
+        errores.append(f"Importe cobrado <= 0 (USD {importe_extracto:.2f})")
+
+    filas_upgrade, errs_desc, todo_downgrade = descomponer_upgrade(
+        plan_nuevo, plan_viejo, modulos_validos
+    )
+    errores.extend(errs_desc)
+    if todo_downgrade:
+        errores.append(
+            f"Solo downgrade (nuevo {plan_nuevo!r} vs viejo {plan_viejo!r}): "
+            f"no hay componente para facturar"
+        )
+    if not filas_upgrade and not errores:
+        errores.append(
+            f"Sin cambios detectables entre {plan_nuevo!r} y {plan_viejo!r}"
+        )
+
+    descuento = descuento_por_frecuencia(frecuencia)
+    nota = nota_upgrade(id_dash, frecuencia)
+
+    lineas = []
+    for componente, tipo, plan_viejo_comp in filas_upgrade:
+        prod = productos.get(componente)
+        if prod is None:
+            errores.append(
+                f"Producto {componente!r} no existe en catalogo/productos.xlsx"
+            )
+            precio = 0.0
+            nombre_prod = None
+            cuenta = None
+        else:
+            precio = float(prod["valor_diario"])
+            nombre_prod = prod["nombre"]
+            cuenta = prod["cuenta_contable"]
+
+        # Para upgrade de plan: precio = diario_nuevo - diario_viejo.
+        if tipo == "Plan" and plan_viejo_comp:
+            prod_viejo = productos.get(plan_viejo_comp)
+            if prod_viejo is None:
+                errores.append(
+                    f"Producto {plan_viejo_comp!r} (plan viejo) no existe en "
+                    f"catalogo/productos.xlsx"
+                )
+            else:
+                precio = float(prod["valor_diario"]) - float(prod_viejo["valor_diario"])
+
+        lineas.append({
+            "componente": componente,
+            "plancito": componente,
+            "producto": nombre_prod,
+            "cuenta": cuenta,
+            "precio_diario": precio,
+            "descuento_pct": float(descuento),
+            "dias": dias,
+            "terminos": terminos_upgrade(tipo, frecuencia),
+            "nota_interna": nota,
+            "tipo_upgrade": tipo,
+        })
+
+    # Si la factura mezcla upgrade de Plan Y Modulo (mismo cobro), unificar
+    # el termino a "Upgrade Plan y Modulo - <Frecuencia>" en TODAS las lineas.
+    # Odoo requiere un unico valor de "Terminos y condiciones" por factura;
+    # dos valores distintos rompen la importacion.
+    tipos_presentes = {l.get("tipo_upgrade") for l in lineas}
+    if "Plan" in tipos_presentes and "Modulo" in tipos_presentes:
+        freq_larga = FRECUENCIA_LARGA.get(
+            (frecuencia or "").strip().lower(), "Mensual"
+        )
+        termino_unificado = f"Upgrade Plan y Módulo - {freq_larga}"
+        for l in lineas:
+            l["terminos"] = termino_unificado
+
+    return lineas, errores
+
+
+# ---------------------------------------------------------------------------
+# Deteccion de Suscripcion (pivot check)
+# ---------------------------------------------------------------------------
+
+def aplicar_suscripcion(facturas: list[dict]):
+    """Marca como Suscripcion las facturas cuyo ratio importe/bruto cae en el
+    rango de descuento 5%. Aplica solo a facturas actualmente Mensual y sin
+    descuento > 0 (para no pisar Semestral/Anual).
+    """
+    for f in facturas:
+        if f["errores"]:
+            continue
+        lineas = f["lineas"]
+        if not lineas:
+            continue
+        # Si alguna linea ya tiene descuento > 0 (semestral/anual), skip.
+        if any(l["descuento_pct"] > 0 for l in lineas):
+            continue
+
+        bruto = sum(l["precio_diario"] * l["dias"] for l in lineas)
+        if bruto <= 0:
+            continue
+        ratio = f["importe_esperado"] / bruto
+        if SUSCRIPCION_MIN <= ratio <= SUSCRIPCION_MAX:
+            # Aplicar descuento 5% en todas las lineas.
+            for l in lineas:
+                l["descuento_pct"] = 5.0
+                # El termino ya dice "Mensual" (Mensual y Suscripcion se rotulan igual).
+                # La nota interna cambia la letra a "R".
+                l["nota_interna"] = nota_upgrade(
+                    f["_id_dash"], "Suscripción", "B"
+                )
+            f["_frecuencia_efectiva"] = "Suscripción"
+
+
+def validar_importe(lineas: list[dict], esperado: float,
+                    tolerancia: float = 0.05) -> tuple[bool, float]:
+    total = 0.0
+    for l in lineas:
+        total += l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100.0)
+    return abs(total - esperado) <= tolerancia, round(total, 2)
+
+
+# ---------------------------------------------------------------------------
+# Escritura del XLSX (mismo formato que regulares)
+# ---------------------------------------------------------------------------
+
+def escribir_xlsx(facturas: list[dict], path: Path):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Import"
+    ws.append(pf.OUTPUT_HEADERS)
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="305496")
+    for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+        cell = ws.cell(1, c)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+    revisar_fill = PatternFill("solid", fgColor="F4CCCC")
+    fecha_fmt = "d/m/yyyy"
+    cols_fecha = (4, 5, 21, 22)
+
+    orden = 0
+    for f in facturas:
+        orden += 1
+        es_revisar = bool(f.get("errores"))
+        lineas = f["lineas"]
+        if not lineas:
+            # Aun sin lineas, si esta en [REVISAR] escribimos una fila
+            # cabecera vacia para que el usuario la vea.
+            row_data = [None] * len(pf.OUTPUT_HEADERS)
+            row_data[0] = orden
+            row_data[1] = f["contacto"]
+            row_data[2] = f["referencia_cliente"]
+            row_data[3] = f["fecha_factura"]
+            row_data[4] = f["fecha_vencimiento"]
+            row_data[5] = f["referencia_pago"]
+            row_data[6] = "[REVISAR] " + " / ".join(f["errores"])
+            ws.append(row_data)
+            row_idx = ws.max_row
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+            if es_revisar:
+                for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+                    ws.cell(row_idx, c).fill = revisar_fill
+            continue
+
+        for i, linea in enumerate(lineas):
+            row_data = [None] * len(pf.OUTPUT_HEADERS)
+            row_data[0] = orden
+
+            if i == 0:
+                row_data[1] = f["contacto"]
+                row_data[2] = f["referencia_cliente"]
+                row_data[3] = f["fecha_factura"]
+                row_data[4] = f["fecha_vencimiento"]
+                row_data[5] = f["referencia_pago"]
+                # 6 = Terminos: se llena por linea (cada componente tiene el suyo).
+                row_data[7] = pf.DIARIO
+                row_data[8] = pf.TIPO_DOCUMENTO
+                row_data[9] = pf.MONEDA
+                row_data[20] = f["inicio_servicio"]
+                row_data[21] = f["fin_servicio"]
+
+            row_data[6] = linea["terminos"]
+            row_data[10] = linea["plancito"]
+            row_data[11] = linea.get("producto") or ""
+            row_data[12] = linea.get("cuenta") or ""
+            row_data[13] = pf.CUENTA_ANALITICA
+            row_data[14] = linea["dias"]
+            row_data[15] = pf.IMPUESTO
+            row_data[16] = linea["precio_diario"]
+            row_data[17] = pf.UNIDAD_MEDIDA
+            row_data[18] = linea["descuento_pct"]
+            row_data[19] = linea["nota_interna"]
+
+            ws.append(row_data)
+            row_idx = ws.max_row
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+            if es_revisar:
+                for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+                    ws.cell(row_idx, c).fill = revisar_fill
+
+    anchos = [8, 25, 25, 14, 14, 22, 22, 25, 22, 6, 15, 30, 30, 22, 8, 12, 14,
+              12, 10, 22, 14, 14]
+    for i, w in enumerate(anchos, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.freeze_panes = "A2"
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(path)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main(argv) -> int:
+    print("=" * 70)
+    print(" PayPal -> Odoo - Facturacion de UPGRADES")
+    print("=" * 70)
+    print()
+
+    if not pf.ENTRADA_DIR.exists():
+        print("ERROR: No existe la carpeta 'entrada/'.")
+        return 2
+
+    extracto_path, historial_path, tabla_path = pf.encontrar_archivos_entrada()
+    errores_iniciales = []
+    if extracto_path is None:
+        errores_iniciales.append("- Extracto_PayPal.csv: no encontrado en entrada/")
+    if historial_path is None:
+        errores_iniciales.append(
+            "- Historial de pagos (.xlsx o .csv): no encontrado en entrada/"
+        )
+    # Tabla de promociones no es requerida en upgrades.
+
+    if errores_iniciales:
+        print("ERROR: Faltan archivos en 'entrada/':")
+        for e in errores_iniciales:
+            print(f"  {e}")
+        return 2
+
+    productos_path = pf.CATALOGO_DIR / "productos.xlsx"
+    if not productos_path.exists():
+        print(f"ERROR: Falta {productos_path}")
+        return 2
+
+    print("Archivos detectados:")
+    print(f"  Extracto:   {extracto_path.name}")
+    print(f"  Historial:  {historial_path.name}")
+    print(f"  Productos:  {productos_path.name}")
+    print()
+
+    print("Cargando archivos...")
+    extracto = pf.load_extracto(extracto_path)
+    historial = pf.load_historial(historial_path)
+    productos = pf.load_productos(productos_path)
+    # Modulos validos: los codigos del catalogo sin sufijo, filtrando planes.
+    modulos_validos = set()
+    for ref in productos.keys():
+        base = ref.rsplit("-", 1)[0]  # 'tbl-int' -> 'tbl'
+        if base in PLAN_RANK or base in PLANES_OBSOLETOS:
+            continue
+        modulos_validos.add(base)
+    print(f"  Extracto:   {len(extracto)} filas")
+    print(f"  Historial:  {len(historial)} cobros")
+    print(f"  Productos:  {len(productos)} productos")
+    print(f"  Modulos validos: {sorted(modulos_validos)}")
+    print()
+
+    cobros, omitidos = pf.filtrar_cobros_clientes(extracto)
+    print(f"Cobros del extracto:           {len(extracto)}")
+    print(f"  Pagos de clientes:           {len(cobros)}")
+    print(f"  Omitidos (no facturables):   {len(omitidos)}")
+    print()
+
+    facturas = []
+    conteo_tipo = defaultdict(int)
+    sin_historial = []
+    no_upgrade = []
+
+    for cobro in cobros:
+        ref = (cobro.get("Referencia") or cobro.get("Referencia ") or "").strip()
+        importe_extracto = pf.parse_es_number(
+            cobro.get("  Importe  ") or cobro.get("Importe")
+        )
+        fecha_cobro = pf.parse_es_date(cobro.get("Fecha"))
+        contacto = (cobro.get("Contacto") or "").strip()
+        descripcion = (cobro.get("Descripción") or "").strip()
+
+        hist = historial.get(ref)
+        if hist is None:
+            sin_historial.append({"ref": ref, "contacto": contacto, "importe": importe_extracto})
+            continue
+
+        tipo = pf.clasificar_tipo_pago(hist)
+        conteo_tipo[tipo] += 1
+        if tipo != "upgrade":
+            no_upgrade.append({"ref": ref, "contacto": contacto, "tipo": tipo})
+            continue
+
+        lineas, errores = armar_factura_upgrade(cobro, hist, productos, modulos_validos)
+
+        inicio_periodo = pf.parse_es_date(hist.get("Inicio de período de pago"))
+        fin_periodo = pf.parse_es_date(hist.get("Fin de período de pago"))
+        id_dash = hist.get("ID de lacuenta") or hist.get("ID cuenta")
+
+        facturas.append({
+            "contacto": contacto,
+            "referencia_cliente": descripcion,
+            "fecha_factura": fecha_cobro,
+            "fecha_vencimiento": fecha_cobro,
+            "referencia_pago": ref,
+            "inicio_servicio": inicio_periodo,
+            "fin_servicio": fin_periodo,
+            "lineas": lineas,
+            "errores": errores,
+            "importe_esperado": importe_extracto,
+            "_frecuencia_efectiva": pf.determinar_frecuencia(hist),
+            "_id_dash": id_dash,
+        })
+
+    # Detectar Suscripcion (pivot check).
+    aplicar_suscripcion(facturas)
+
+    # Validar importe (post-suscripcion).
+    for f in facturas:
+        if f["errores"] or not f["lineas"]:
+            continue
+        ok, calc = validar_importe(f["lineas"], f["importe_esperado"])
+        if not ok:
+            f["errores"].append(
+                f"Descuadre de importe: esperado USD {f['importe_esperado']:.2f}, "
+                f"calculado USD {calc:.2f} (diferencia USD {calc - f['importe_esperado']:+.2f})"
+            )
+
+    # Nombre del archivo.
+    if facturas:
+        from collections import Counter
+        meses = Counter(
+            (f["fecha_factura"].month, f["fecha_factura"].year)
+            for f in facturas if f["fecha_factura"] is not None
+        )
+        if meses:
+            (mes, anio), _ = meses.most_common(1)[0]
+            nombre_periodo = f"{pf.MESES_ES[mes - 1]}_{anio}"
+        else:
+            nombre_periodo = "sin_periodo"
+        nombre_archivo = f"Importacion_upgrades_{nombre_periodo}.xlsx"
+    else:
+        nombre_archivo = "Importacion_upgrades.xlsx"
+    salida = pf.SALIDA_DIR / nombre_archivo
+
+    if salida.exists():
+        try:
+            with open(salida, "a"):
+                pass
+        except PermissionError:
+            print(f"ERROR: No puedo sobrescribir {salida.name}.")
+            print(f"       El archivo esta abierto en Excel. Cerralo y volve a correr.")
+            return 3
+
+    pf.SALIDA_DIR.mkdir(parents=True, exist_ok=True)
+    escribir_xlsx(facturas, salida)
+
+    # ---- Resumen en consola ----
+    print(f"Clasificacion de pagos:")
+    print(f"  Upgrade:                     {conteo_tipo['upgrade']}")
+    print(f"  Regular (omitido):           {conteo_tipo['regular']}")
+    print(f"  Migracion (omitido):         {conteo_tipo['migracion']}")
+    print(f"  Desconocido:                 {conteo_tipo['desconocido']}")
+    print(f"  Sin match en historial:      {len(sin_historial)}")
+    print()
+
+    revisar = [f for f in facturas if f["errores"]]
+    ok = [f for f in facturas if not f["errores"]]
+    total_facturado = sum(
+        sum(l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100)
+            for l in f["lineas"])
+        for f in ok
+    )
+    total_revisar = sum(f["importe_esperado"] for f in revisar)
+
+    print(f"Facturas OK:                   {len(ok)}")
+    print(f"Facturas con [REVISAR]:        {len(revisar)}")
+    print()
+    print(f"Total facturado OK:            USD {total_facturado:10.2f}")
+    print(f"Total en [REVISAR]:            USD {total_revisar:10.2f}")
+    print()
+    print("=" * 70)
+    print(f"OK Generado: salida/{nombre_archivo}")
+    print("=" * 70)
+
+    if sin_historial:
+        print()
+        print(f"AVISO: {len(sin_historial)} cobro(s) sin match en Historial:")
+        for s in sin_historial[:10]:
+            print(f"    - Ref {s['ref']} | {s['contacto']} | USD {s['importe']:.2f}")
+        if len(sin_historial) > 10:
+            print(f"    ... y {len(sin_historial) - 10} mas")
+
+    if revisar:
+        print()
+        print("=" * 70)
+        print(f"ATENCION - {len(revisar)} factura(s) marcada(s) como [REVISAR]:")
+        print("=" * 70)
+        for f in revisar:
+            print(f"\n  Cliente: {f['contacto']}  |  Ref: {f['referencia_pago']}  |  USD {f['importe_esperado']:.2f}")
+            for err in f["errores"]:
+                print(f"    - {err}")
+    else:
+        print()
+        print("PERFECTO! No se detectaron problemas. El archivo esta listo.")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+</script>
+<script type="text/plain" id="py-migraciones">#!/usr/bin/env python3
+"""
+PayPal -> Odoo (facturacion de MIGRACIONES de plan) - Fase 3
+=============================================================
+
+Toma los cobros de PayPal clasificados como migracion (Accion="Pago regular"
+en el historial + Dias cobrados plan viejo > 0) y arma el XLSX de importacion
+a Odoo. La estructura de la hoja Import es identica a la de regulares y
+upgrades.
+
+Descomposicion de una migracion (ejemplo real Sushi0285):
+    Plan viejo: pro-tbl-int (1 dia)
+    Plan nuevo: adv-tbl-int (360 dias)
+    Anual, codigo 15 -> 15% descuento
+
+    Se generan 3 lineas:
+      - pro-int : 1 dia   (plan SOLO en viejo)
+      - tbl-int : 361 d.  (modulo COMPARTIDO, dias viejo + nuevo)
+      - adv-int : 360 d.  (plan SOLO en nuevo)
+    Total = 1.28 + 51.14 + 357.00 = 409.42 -> matchea importe cobrado.
+
+Regla general:
+    - Componente en AMBOS planes  -> dias_viejo + dias_nuevo
+    - Componente SOLO en viejo    -> dias_viejo
+    - Componente SOLO en nuevo    -> dias_nuevo
+    - Plan viejo == Plan nuevo    -> [REVISAR] (no deberia pasar)
+
+Descuento:
+    UN SOLO % por factura, aplicado a todas las lineas. Se busca con
+    (codigo_historico + componente_plan_nuevo) en la Tabla; si es numerico o
+    vacio, fallback por frecuencia; si es alfanumerico y no matchea,
+    [REVISAR] + hoja "Faltantes para Tabla".
+
+Terminos, nota interna, fechas AFIP: igual que regulares.
+
+USO:
+    Doble click en Generar_migraciones_PayPal.bat, o desde consola:
+        python paypal_migraciones.py
+
+Los archivos de entrada son los mismos que para regulares/upgrades
+(entrada/): Extracto_PayPal.csv, Historial de pagos, Tabla de promociones.
+"""
+
+from __future__ import annotations
+
+import sys
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+
+import openpyxl
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
+# Reutilizamos toda la infra del script de regulares.
+import paypal_facturacion as pf
+
+
+# ---------------------------------------------------------------------------
+# Descomposicion de la migracion
+# ---------------------------------------------------------------------------
+
+def descomponer_migracion(plan_viejo_raw, plan_nuevo_raw,
+                          dias_viejo: int, dias_nuevo: int,
+                          overrides: dict):
+    """Descompone una migracion en lineas de factura.
+
+    Devuelve (lineas, errores) donde:
+        lineas: lista de dicts {"componente", "dias", "origen"}
+            origen ∈ ('solo_viejo', 'compartido', 'solo_nuevo')
+        errores: strings con problemas (parseo, caso degenerado, etc.)
+    """
+    errores = []
+
+    comps_viejo, sufijo_v, err_v = pf.descomponer_plan(plan_viejo_raw, overrides)
+    comps_nuevo, sufijo_n, err_n = pf.descomponer_plan(plan_nuevo_raw, overrides)
+
+    if err_v:
+        errores.append(f"Plan viejo {plan_viejo_raw!r}: {err_v}")
+    if err_n:
+        errores.append(f"Plan nuevo {plan_nuevo_raw!r}: {err_n}")
+    if errores:
+        return [], errores
+
+    # Sufijos deben coincidir (ambos -int o ambos -uy).
+    if sufijo_v and sufijo_n and sufijo_v != sufijo_n:
+        errores.append(
+            f"Sufijos distintos entre plan viejo ({sufijo_v}) y "
+            f"plan nuevo ({sufijo_n})"
+        )
+        return [], errores
+    sufijo = sufijo_n or sufijo_v
+
+    set_viejo = set(comps_viejo)
+    set_nuevo = set(comps_nuevo)
+
+    # Caso degenerado: mismos componentes exactos.
+    if set_viejo == set_nuevo:
+        errores.append(
+            f"Plan viejo y nuevo son iguales ({plan_viejo_raw!r}): "
+            f"no deberia ser una migracion, revisar"
+        )
+        return [], errores
+
+    # NOTA: para el lookup en catalogo/productos.xlsx siempre usamos "-int"
+    # (los productos de Uruguay no existen como -uy en el catalogo, se
+    # facturan con el codigo -int igual que los internacionales).
+    sufijo_catalogo = "-int"
+
+    lineas = []
+    # Orden pensado para replicar el layout del template Others:
+    # 1) componentes SOLO viejo, 2) COMPARTIDOS, 3) SOLO nuevo.
+    for comp in sorted(set_viejo - set_nuevo):
+        lineas.append({
+            "componente": comp,
+            "sufijo": sufijo_catalogo,
+            "dias": dias_viejo,
+            "origen": "solo_viejo",
+        })
+    for comp in sorted(set_viejo & set_nuevo):
+        lineas.append({
+            "componente": comp,
+            "sufijo": sufijo_catalogo,
+            "dias": dias_viejo + dias_nuevo,
+            "origen": "compartido",
+        })
+    for comp in sorted(set_nuevo - set_viejo):
+        lineas.append({
+            "componente": comp,
+            "sufijo": sufijo_catalogo,
+            "dias": dias_nuevo,
+            "origen": "solo_nuevo",
+        })
+
+    return lineas, errores
+
+
+def _componente_para_lookup(desc_lineas: list[dict]) -> str | None:
+    """Devuelve el componente que se usa para hacer lookup del descuento.
+
+    Prioriza el plan del componente "solo_nuevo" o "compartido" que sea
+    reconocido como plan (adv/pro). Si no hay, usa el primer componente.
+    """
+    planes = ("adv", "pro", "ini", "ba", "st", "fu")
+    for origen_priority in ("solo_nuevo", "compartido"):
+        for l in desc_lineas:
+            if l["origen"] == origen_priority and l["componente"] in planes:
+                return l["componente"]
+    # Fallback: primer componente disponible
+    if desc_lineas:
+        return desc_lineas[0]["componente"]
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Armado de la factura
+# ---------------------------------------------------------------------------
+
+def armar_factura_migracion(cobro: dict, hist: dict, tabla: dict,
+                            productos: dict, overrides: dict):
+    """Arma las lineas de factura de una migracion.
+
+    Devuelve (lineas, errores, faltantes).
+        lineas: lista de dicts listas para escribir en XLSX.
+        errores: lista de mensajes de problema.
+        faltantes: lista de combinaciones (codigo, componente) que faltan
+                   en la Tabla de promociones (una unica por factura).
+    """
+    errores = []
+    faltantes = []
+
+    plan_viejo = hist.get("Plan viejo") or ""
+    plan_nuevo = hist.get("Plan") or ""
+    dias_viejo = int(pf.parse_es_number(
+        hist.get("Dias cobrados del plan viejo") or 0
+    ))
+    dias_nuevo = int(pf.parse_es_number(
+        hist.get("Dias cobrados del plan nuevo") or 0
+    ))
+    codigo_hist = hist.get("Nombre de la promociones")
+    id_dash = hist.get("ID de lacuenta") or hist.get("ID cuenta")
+    frecuencia = pf.determinar_frecuencia(hist)
+
+    # Excepciones defensivas
+    importe_extracto = pf.parse_es_number(
+        cobro.get("  Importe  ") or cobro.get("Importe") or 0
+    )
+    if importe_extracto <= 0:
+        errores.append(f"Importe cobrado <= 0 (USD {importe_extracto:.2f})")
+    if dias_viejo <= 0 or dias_nuevo <= 0:
+        errores.append(
+            f"Dias inconsistentes: viejo={dias_viejo}, nuevo={dias_nuevo}"
+        )
+
+    desc_lineas, errs_desc = descomponer_migracion(
+        plan_viejo, plan_nuevo, dias_viejo, dias_nuevo, overrides
+    )
+    errores.extend(errs_desc)
+
+    if not desc_lineas:
+        return [], errores, faltantes
+
+    # Descuento POR LINEA: cada componente busca su propio descuento en la
+    # Tabla (soporta codigos multiples separados por coma y codigos simples
+    # con % distintos por componente, ej. CS_PRO_15MIG2_OT: 15% pro / 0% resto).
+    lineas = []
+    for dl in desc_lineas:
+        plancito = f"{dl['componente']}{dl['sufijo']}"
+        prod = productos.get(plancito)
+
+        pct, tipo_desc, promo_ind, err_desc, faltante = pf.calcular_descuento(
+            codigo_hist, dl["componente"], frecuencia, tabla
+        )
+        if err_desc:
+            errores.append(err_desc)
+        if faltante is not None:
+            faltantes.append(faltante)
+
+        nota = pf.armar_nota_interna(promo_ind, id_dash, tipo_desc, frecuencia)
+
+        if prod is None:
+            errores.append(
+                f"Producto {plancito!r} no existe en catalogo/productos.xlsx"
+            )
+            lineas.append({
+                "componente": dl["componente"],
+                "plancito": plancito,
+                "producto": None,
+                "cuenta": None,
+                "precio_diario": 0.0,
+                "descuento_pct": float(pct),
+                "tipo_descuento": tipo_desc,
+                "promo_individual": promo_ind,
+                "nota_interna": nota,
+                "dias": dl["dias"],
+                "origen": dl["origen"],
+            })
+            continue
+
+        lineas.append({
+            "componente": dl["componente"],
+            "plancito": plancito,
+            "producto": prod["nombre"],
+            "cuenta": prod["cuenta_contable"],
+            "precio_diario": float(prod["valor_diario"]),
+            "descuento_pct": float(pct),
+            "tipo_descuento": tipo_desc,
+            "promo_individual": promo_ind,
+            "nota_interna": nota,
+            "dias": dl["dias"],
+            "origen": dl["origen"],
+        })
+
+    return lineas, errores, faltantes
+
+
+def validar_importe(lineas: list[dict], esperado: float,
+                    tolerancia: float = 0.05) -> tuple[bool, float]:
+    total = 0.0
+    for l in lineas:
+        total += l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100.0)
+    return abs(total - esperado) <= tolerancia, round(total, 2)
+
+
+# ---------------------------------------------------------------------------
+# Escritura XLSX (mismo formato que regulares y upgrades)
+# ---------------------------------------------------------------------------
+
+def escribir_xlsx(facturas: list[dict], path: Path,
+                  faltantes_tabla: list[dict] | None = None):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Import"
+    ws.append(pf.OUTPUT_HEADERS)
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="305496")
+    for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+        cell = ws.cell(1, c)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+    revisar_fill = PatternFill("solid", fgColor="F4CCCC")
+    fecha_fmt = "d/m/yyyy"
+    cols_fecha = (4, 5, 21, 22)
+
+    orden = 0
+    for f in facturas:
+        orden += 1
+        es_revisar = bool(f.get("errores"))
+        lineas = f["lineas"]
+
+        if not lineas:
+            # Factura sin lineas (todo error): 1 fila cabecera pintada
+            row_data = [None] * len(pf.OUTPUT_HEADERS)
+            row_data[0] = orden
+            row_data[1] = f["contacto"]
+            row_data[2] = f["referencia_cliente"]
+            row_data[3] = f["fecha_factura"]
+            row_data[4] = f["fecha_vencimiento"]
+            row_data[5] = f["referencia_pago"]
+            row_data[6] = "[REVISAR] " + " / ".join(f["errores"])
+            ws.append(row_data)
+            row_idx = ws.max_row
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+            for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+                ws.cell(row_idx, c).fill = revisar_fill
+            continue
+
+        for i, linea in enumerate(lineas):
+            row_data = [None] * len(pf.OUTPUT_HEADERS)
+            row_data[0] = orden
+
+            if i == 0:
+                row_data[1] = f["contacto"]
+                row_data[2] = f["referencia_cliente"]
+                row_data[3] = f["fecha_factura"]
+                row_data[4] = f["fecha_vencimiento"]
+                row_data[5] = f["referencia_pago"]
+                row_data[6] = f["terminos"]
+                row_data[7] = pf.DIARIO
+                row_data[8] = pf.TIPO_DOCUMENTO
+                row_data[9] = pf.MONEDA
+                row_data[20] = f["inicio_servicio"]
+                row_data[21] = f["fin_servicio"]
+
+            row_data[10] = linea["plancito"]
+            row_data[11] = linea.get("producto") or ""
+            row_data[12] = linea.get("cuenta") or ""
+            row_data[13] = pf.CUENTA_ANALITICA
+            row_data[14] = linea["dias"]
+            row_data[15] = pf.IMPUESTO
+            row_data[16] = linea["precio_diario"]
+            row_data[17] = pf.UNIDAD_MEDIDA
+            row_data[18] = linea["descuento_pct"]
+            row_data[19] = linea["nota_interna"]
+
+            ws.append(row_data)
+            row_idx = ws.max_row
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+            if es_revisar:
+                for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+                    ws.cell(row_idx, c).fill = revisar_fill
+
+    anchos = [8, 25, 25, 14, 14, 22, 20, 25, 22, 6, 15, 30, 30, 22, 8, 12, 14,
+              12, 10, 22, 14, 14]
+    for i, w in enumerate(anchos, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.freeze_panes = "A2"
+
+    # Segunda hoja: Faltantes para Tabla (misma logica que regulares)
+    if faltantes_tabla:
+        ws2 = wb.create_sheet("Faltantes para Tabla")
+        agrupado: dict[tuple[str, str], dict] = {}
+        for item in faltantes_tabla:
+            codigo = (item.get("codigo") or "").strip()
+            componente = (item.get("componente") or "").strip().lower()
+            cliente = item.get("cliente") or ""
+            ref = item.get("ref") or ""
+            key = (codigo, componente)
+            if key not in agrupado:
+                agrupado[key] = {
+                    "codigo": codigo, "componente": componente,
+                    "frecuencias": set(), "veces": 0,
+                    "ejemplo_cliente": cliente, "ejemplo_ref": ref,
+                }
+            agrupado[key]["frecuencias"].add(item.get("frecuencia") or "")
+            agrupado[key]["veces"] += 1
+
+        headers2 = [
+            "Nombredelapromociones(Historialdepagos)", "Plan/Módulo",
+            "PromoIndividual", "Fusión(A+B)", "Mensual", "Suscripción",
+            "Trimestral", "Semestral", "Anual", "Tipodedescuento",
+            "PromoIndividual",
+            "Frecuencia(s) vista(s)", "Veces", "Ejemplo cliente",
+            "Ejemplo Ref PayPal",
+        ]
+        ws2.append(headers2)
+        for c in range(1, len(headers2) + 1):
+            cell = ws2.cell(1, c)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", wrap_text=True)
+        contexto_fill = PatternFill("solid", fgColor="EEEEEE")
+
+        for entry in sorted(agrupado.values(),
+                             key=lambda e: (e["codigo"], e["componente"])):
+            codigo = entry["codigo"]
+            componente = entry["componente"]
+            fusion = (codigo + componente.upper()).upper()
+            frecs = ", ".join(sorted(entry["frecuencias"]))
+            ws2.append([
+                codigo, componente, None, fusion,
+                None, None, None, None, None, None, None,
+                frecs, entry["veces"],
+                entry["ejemplo_cliente"], entry["ejemplo_ref"],
+            ])
+            r = ws2.max_row
+            for c in range(12, len(headers2) + 1):
+                ws2.cell(r, c).fill = contexto_fill
+
+        anchos2 = [32, 18, 18, 26, 10, 12, 11, 11, 8, 16, 18, 22, 8, 28, 22]
+        for i, w in enumerate(anchos2, start=1):
+            ws2.column_dimensions[get_column_letter(i)].width = w
+        ws2.freeze_panes = "A2"
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(path)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main(argv) -> int:
+    print("=" * 70)
+    print(" PayPal -> Odoo - Facturacion de MIGRACIONES de plan")
+    print("=" * 70)
+    print()
+
+    if not pf.ENTRADA_DIR.exists():
+        print("ERROR: No existe la carpeta 'entrada/'.")
+        return 2
+
+    extracto_path, historial_path, tabla_path = pf.encontrar_archivos_entrada()
+    errores_iniciales = []
+    if extracto_path is None:
+        errores_iniciales.append("- Extracto_PayPal.csv: no encontrado en entrada/")
+    if historial_path is None:
+        errores_iniciales.append(
+            "- Historial de pagos (.xlsx o .csv): no encontrado en entrada/"
+        )
+    if tabla_path is None:
+        errores_iniciales.append(
+            "- Tabla de promociones.xlsx: no encontrada en entrada/"
+        )
+    if errores_iniciales:
+        print("ERROR: Faltan archivos en 'entrada/':")
+        for e in errores_iniciales:
+            print(f"  {e}")
+        return 2
+
+    productos_path = pf.CATALOGO_DIR / "productos.xlsx"
+    if not productos_path.exists():
+        print(f"ERROR: Falta {productos_path}")
+        return 2
+    lineas_path = pf.CATALOGO_DIR / "lineas.xlsx"
+
+    print("Archivos detectados:")
+    print(f"  Extracto:   {extracto_path.name}")
+    print(f"  Historial:  {historial_path.name}")
+    print(f"  Tabla:      {tabla_path.name}")
+    print(f"  Productos:  {productos_path.name}")
+    if lineas_path.exists():
+        print(f"  Lineas:     (override) {lineas_path.name}")
+    print()
+
+    print("Cargando archivos...")
+    extracto = pf.load_extracto(extracto_path)
+    historial = pf.load_historial(historial_path)
+    tabla = pf.load_tabla_promociones(tabla_path)
+    productos = pf.load_productos(productos_path)
+    overrides = pf.load_lineas_overrides(lineas_path)
+    print(f"  Extracto:   {len(extracto)} filas")
+    print(f"  Historial:  {len(historial)} cobros")
+    print(f"  Tabla:      {len(tabla)} combinaciones de promocion")
+    print(f"  Productos:  {len(productos)} productos")
+    print()
+
+    cobros, omitidos = pf.filtrar_cobros_clientes(extracto)
+    print(f"Cobros del extracto:           {len(extracto)}")
+    print(f"  Pagos de clientes:           {len(cobros)}")
+    print(f"  Omitidos (no facturables):   {len(omitidos)}")
+    print()
+
+    facturas = []
+    conteo_tipo = defaultdict(int)
+    sin_historial = []
+    faltantes_tabla = []
+
+    for cobro in cobros:
+        ref = (cobro.get("Referencia") or cobro.get("Referencia ") or "").strip()
+        importe_extracto = pf.parse_es_number(
+            cobro.get("  Importe  ") or cobro.get("Importe")
+        )
+        fecha_cobro = pf.parse_es_date(cobro.get("Fecha"))
+        contacto = (cobro.get("Contacto") or "").strip()
+        descripcion = (cobro.get("Descripción") or "").strip()
+
+        hist = historial.get(ref)
+        if hist is None:
+            sin_historial.append({"ref": ref, "contacto": contacto, "importe": importe_extracto})
+            continue
+
+        tipo = pf.clasificar_tipo_pago(hist)
+        conteo_tipo[tipo] += 1
+        if tipo != "migracion":
+            continue
+
+        lineas, errores, faltantes_fac = armar_factura_migracion(
+            cobro, hist, tabla, productos, overrides
+        )
+        for fal in faltantes_fac:
+            faltantes_tabla.append({
+                **fal,
+                "cliente": contacto,
+                "ref": ref,
+                "frecuencia": pf.determinar_frecuencia(hist),
+            })
+
+        # Validar importe (post-descomposicion)
+        if lineas:
+            ok, calc = validar_importe(lineas, importe_extracto)
+            if not ok:
+                errores.append(
+                    f"Descuadre de importe: esperado USD {importe_extracto:.2f}, "
+                    f"calculado USD {calc:.2f} (diferencia USD {calc - importe_extracto:+.2f})"
+                )
+                # Si el descuadre coincide con 5% de Suscripcion no declarada,
+                # sumar aviso informativo (no aplica el descuento automatico).
+                factura_temp = {"lineas": lineas, "importe_esperado": importe_extracto}
+                aviso_susc = pf.detectar_suscripcion_implicita(factura_temp, hist)
+                if aviso_susc:
+                    errores.append(aviso_susc)
+
+        inicio_periodo = pf.parse_es_date(hist.get("Inicio de período de pago"))
+        fin_periodo = pf.parse_es_date(hist.get("Fin de período de pago"))
+        frecuencia = pf.determinar_frecuencia(hist)
+        dias_plan_nuevo = int(pf.parse_es_number(
+            hist.get("Dias cobrados del plan nuevo") or 0
+        ))
+        terminos = pf.terminos_y_condiciones(
+            inicio_periodo, fin_periodo,
+            frecuencia=frecuencia,
+            dias_plan_nuevo=dias_plan_nuevo,
+            fecha_factura=fecha_cobro,
+        )
+
+        facturas.append({
+            "contacto": contacto,
+            "referencia_cliente": descripcion,
+            "fecha_factura": fecha_cobro,
+            "fecha_vencimiento": fecha_cobro,
+            "referencia_pago": ref,
+            "terminos": terminos,
+            "inicio_servicio": inicio_periodo,
+            "fin_servicio": fin_periodo,
+            "lineas": lineas,
+            "errores": errores,
+            "importe_esperado": importe_extracto,
+        })
+
+    # Nombre del archivo (mes/año mas comun de fechas de cobro)
+    if facturas:
+        from collections import Counter
+        meses = Counter(
+            (f["fecha_factura"].month, f["fecha_factura"].year)
+            for f in facturas if f["fecha_factura"] is not None
+        )
+        if meses:
+            (mes, anio), _ = meses.most_common(1)[0]
+            nombre_periodo = f"{pf.MESES_ES[mes - 1]}_{anio}"
+        else:
+            nombre_periodo = "sin_periodo"
+        nombre_archivo = f"Importacion_migraciones_{nombre_periodo}.xlsx"
+    else:
+        nombre_archivo = "Importacion_migraciones.xlsx"
+    salida = pf.SALIDA_DIR / nombre_archivo
+
+    if salida.exists():
+        try:
+            with open(salida, "a"):
+                pass
+        except PermissionError:
+            print(f"ERROR: No puedo sobrescribir {salida.name}.")
+            print(f"       El archivo esta abierto en Excel. Cerralo y volve a correr.")
+            return 3
+
+    pf.SALIDA_DIR.mkdir(parents=True, exist_ok=True)
+    escribir_xlsx(facturas, salida, faltantes_tabla=faltantes_tabla)
+
+    # Resumen consola
+    print(f"Clasificacion de pagos:")
+    print(f"  Migracion:                   {conteo_tipo['migracion']}")
+    print(f"  Regular (omitido):           {conteo_tipo['regular']}")
+    print(f"  Upgrade (omitido):           {conteo_tipo['upgrade']}")
+    print(f"  Desconocido:                 {conteo_tipo['desconocido']}")
+    print(f"  Sin match en historial:      {len(sin_historial)}")
+    print()
+
+    revisar = [f for f in facturas if f["errores"]]
+    ok = [f for f in facturas if not f["errores"]]
+    total_facturado = sum(
+        sum(l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100)
+            for l in f["lineas"])
+        for f in ok
+    )
+    total_revisar = sum(f["importe_esperado"] for f in revisar)
+
+    print(f"Facturas OK:                   {len(ok)}")
+    print(f"Facturas con [REVISAR]:        {len(revisar)}")
+    print()
+    print(f"Total facturado OK:            USD {total_facturado:10.2f}")
+    print(f"Total en [REVISAR]:            USD {total_revisar:10.2f}")
+    print()
+    print("=" * 70)
+    print(f"OK Generado: salida/{nombre_archivo}")
+    print("=" * 70)
+
+    if faltantes_tabla:
+        combos_unicos = set()
+        for fal in faltantes_tabla:
+            combos_unicos.add((
+                (fal.get("codigo") or "").strip(),
+                (fal.get("componente") or "").strip().lower(),
+            ))
+        print()
+        print(f"INFO: {len(combos_unicos)} combinacion(es) de codigo+componente NO estan")
+        print(f"      en la Tabla de promociones. Ver hoja 'Faltantes para Tabla'")
+        print(f"      en el archivo de salida.")
+
+    if sin_historial:
+        print()
+        print(f"AVISO: {len(sin_historial)} cobro(s) sin match en Historial:")
+        for s in sin_historial[:10]:
+            print(f"    - Ref {s['ref']} | {s['contacto']} | USD {s['importe']:.2f}")
+        if len(sin_historial) > 10:
+            print(f"    ... y {len(sin_historial) - 10} mas")
+
+    if revisar:
+        print()
+        print("=" * 70)
+        print(f"ATENCION - {len(revisar)} factura(s) marcada(s) como [REVISAR]:")
+        print("=" * 70)
+        for f in revisar:
+            print(f"\n  Cliente: {f['contacto']}  |  Ref: {f['referencia_pago']}  |  USD {f['importe_esperado']:.2f}")
+            for err in f["errores"]:
+                print(f"    - {err}")
+    else:
+        print()
+        print("PERFECTO! No se detectaron problemas. El archivo esta listo.")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+</script>
+<script type="text/plain" id="py-completa">#!/usr/bin/env python3
+"""
+PayPal -> Odoo (facturacion COMPLETA - Regulares + Upgrades + Migraciones)
+==========================================================================
+
+Corre los 3 tipos de pago en un solo run y genera UN unico XLSX consolidado
+para importar a Odoo. Reusa toda la logica de los 3 scripts individuales:
+
+    paypal_facturacion.py    -> pagos regulares
+    paypal_upgrades.py       -> upgrades
+    paypal_migraciones.py    -> migraciones de plan
+
+La hoja "Import Odoo" tiene TODAS las facturas ordenadas por fecha de cobro.
+Si hay codigos que faltan en la Tabla de promociones (venidos de regulares o
+migraciones), aparecen unificados en la hoja "Faltantes para Tabla".
+
+USO:
+    Doble click en Generar_facturacion_completa_PayPal.bat, o desde consola:
+        python paypal_facturacion_completa.py
+
+Los 3 scripts individuales quedan disponibles por separado (no se tocan).
+"""
+
+from __future__ import annotations
+
+import sys
+from collections import defaultdict, Counter
+from datetime import datetime
+from pathlib import Path
+
+import openpyxl
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+
+# Reusamos los 3 scripts como modulos.
+import paypal_facturacion as pf
+import paypal_upgrades as pu
+import paypal_migraciones as pm
+
+
+# ---------------------------------------------------------------------------
+# Escritura del XLSX consolidado
+# ---------------------------------------------------------------------------
+
+def escribir_xlsx_consolidado(facturas: list[dict], path: Path,
+                              faltantes_tabla: list[dict] | None = None,
+                              avisos_control: list[dict] | None = None):
+    """Escribe el XLSX consolidado.
+
+    `facturas` es una lista de dicts con este shape uniforme:
+        {
+            "tipo": "regular" | "upgrade" | "migracion",
+            "contacto", "referencia_cliente",
+            "fecha_factura", "fecha_vencimiento",
+            "referencia_pago",
+            "terminos",             # str o None (upgrades lo tienen por linea)
+            "inicio_servicio", "fin_servicio",
+            "lineas": [...],        # cada linea es dict con plancito, producto,
+                                    # cuenta, dias, precio_diario, descuento_pct,
+                                    # nota_interna, y opcionalmente 'terminos'
+                                    # (upgrades lo llevan por linea)
+            "errores": [...],
+        }
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Import Odoo"
+    ws.sheet_properties.tabColor = "FF5023"  # naranja Fudo
+    ws.append(pf.OUTPUT_HEADERS)
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="FF5023")  # naranja Fudo (también usado en las otras hojas)
+    for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+        cell = ws.cell(1, c)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+    revisar_fill = PatternFill("solid", fgColor="F4CCCC")
+    fecha_fmt = "d/m/yyyy"
+    cols_fecha = (4, 5, 21, 22)
+
+    orden = 0
+    for f in facturas:
+        orden += 1
+        es_revisar = bool(f.get("errores"))
+        lineas = f["lineas"]
+
+        if not lineas:
+            # Sin lineas (todo error): 1 fila cabecera pintada roja.
+            row_data = [None] * len(pf.OUTPUT_HEADERS)
+            row_data[0] = orden
+            row_data[1] = f["contacto"]
+            row_data[2] = f["referencia_cliente"]
+            row_data[3] = f["fecha_factura"]
+            row_data[4] = f["fecha_vencimiento"]
+            row_data[5] = f["referencia_pago"]
+            row_data[6] = "[REVISAR] " + " / ".join(f["errores"])
+            ws.append(row_data)
+            row_idx = ws.max_row
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+            for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+                ws.cell(row_idx, c).fill = revisar_fill
+            continue
+
+        for i, linea in enumerate(lineas):
+            row_data = [None] * len(pf.OUTPUT_HEADERS)
+            row_data[0] = orden
+
+            if i == 0:
+                row_data[1] = f["contacto"]
+                row_data[2] = f["referencia_cliente"]
+                row_data[3] = f["fecha_factura"]
+                row_data[4] = f["fecha_vencimiento"]
+                row_data[5] = f["referencia_pago"]
+                # Terminos: si la linea trae el suyo (upgrades) lo uso;
+                # si no, uso el de la factura (regulares/migraciones).
+                # En upgrades con mezcla Plan+Modulo, armar_factura_upgrade
+                # unifica el termino de TODAS las lineas para respetar la
+                # restriccion de Odoo (un unico termino por factura).
+                row_data[6] = linea.get("terminos") or f.get("terminos") or ""
+                row_data[7] = pf.DIARIO
+                row_data[8] = pf.TIPO_DOCUMENTO
+                row_data[9] = pf.MONEDA
+                row_data[20] = f["inicio_servicio"]
+                row_data[21] = f["fin_servicio"]
+            # Filas de continuacion: NO escribir terminos ni cabecera. Odoo
+            # espera un unico valor de "Terminos y condiciones" por factura;
+            # si aparecen 2 celdas distintas rechaza la importacion.
+
+            row_data[10] = linea["plancito"]
+            row_data[11] = linea.get("producto") or ""
+            row_data[12] = linea.get("cuenta") or ""
+            row_data[13] = pf.CUENTA_ANALITICA
+            row_data[14] = linea["dias"]
+            row_data[15] = pf.IMPUESTO
+            row_data[16] = linea["precio_diario"]
+            row_data[17] = pf.UNIDAD_MEDIDA
+            row_data[18] = linea["descuento_pct"]
+            row_data[19] = linea["nota_interna"]
+
+            ws.append(row_data)
+            row_idx = ws.max_row
+            for c in cols_fecha:
+                ws.cell(row_idx, c).number_format = fecha_fmt
+            if es_revisar:
+                for c in range(1, len(pf.OUTPUT_HEADERS) + 1):
+                    ws.cell(row_idx, c).fill = revisar_fill
+
+    anchos = [8, 25, 25, 14, 14, 22, 26, 25, 22, 6, 15, 30, 30, 22, 8, 12, 14,
+              12, 10, 22, 14, 14]
+    for i, w in enumerate(anchos, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+    ws.freeze_panes = "A2"
+    ws.row_dimensions[1].height = 24
+
+    # ---- Hoja Faltantes para Tabla (unificada) ----
+    if faltantes_tabla:
+        ws2 = wb.create_sheet("Faltantes para Tabla")
+        agrupado: dict[tuple[str, str], dict] = {}
+        for item in faltantes_tabla:
+            codigo = (item.get("codigo") or "").strip()
+            componente = (item.get("componente") or "").strip().lower()
+            cliente = item.get("cliente") or ""
+            ref = item.get("ref") or ""
+            frecuencia = item.get("frecuencia") or ""
+            tipo_pago = item.get("tipo_pago") or ""
+            key = (codigo, componente)
+            if key not in agrupado:
+                agrupado[key] = {
+                    "codigo": codigo, "componente": componente,
+                    "frecuencias": set(), "veces": 0,
+                    "tipos_pago": set(),
+                    "ejemplo_cliente": cliente, "ejemplo_ref": ref,
+                }
+            agrupado[key]["frecuencias"].add(frecuencia)
+            agrupado[key]["veces"] += 1
+            if tipo_pago:
+                agrupado[key]["tipos_pago"].add(tipo_pago)
+
+        headers2 = [
+            "Nombredelapromociones(Historialdepagos)", "Plan/Módulo",
+            "PromoIndividual", "Fusión(A+B)", "Mensual", "Suscripción",
+            "Trimestral", "Semestral", "Anual", "Tipodedescuento",
+            "PromoIndividual",
+            "Frecuencia(s) vista(s)", "Tipo(s) de pago", "Veces",
+            "Ejemplo cliente", "Ejemplo Ref PayPal",
+        ]
+        ws2.append(headers2)
+        for c in range(1, len(headers2) + 1):
+            cell = ws2.cell(1, c)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", wrap_text=True)
+        contexto_fill = PatternFill("solid", fgColor="EEEEEE")
+
+        for entry in sorted(agrupado.values(),
+                             key=lambda e: (e["codigo"], e["componente"])):
+            codigo = entry["codigo"]
+            componente = entry["componente"]
+            fusion = (codigo + componente.upper()).upper()
+            frecs = ", ".join(sorted(f for f in entry["frecuencias"] if f))
+            tipos = ", ".join(sorted(entry["tipos_pago"]))
+            ws2.append([
+                codigo, componente, None, fusion,
+                None, None, None, None, None, None, None,
+                frecs, tipos, entry["veces"],
+                entry["ejemplo_cliente"], entry["ejemplo_ref"],
+            ])
+            r = ws2.max_row
+            for c in range(12, len(headers2) + 1):
+                ws2.cell(r, c).fill = contexto_fill
+
+        anchos2 = [32, 18, 18, 26, 10, 12, 11, 11, 8, 16, 18, 22, 18, 8, 28, 22]
+        for i, w in enumerate(anchos2, start=1):
+            ws2.column_dimensions[get_column_letter(i)].width = w
+        ws2.freeze_panes = "A2"
+
+    # ---- Hoja Avisos de control ----
+    if avisos_control:
+        ws3 = wb.create_sheet("Avisos de control")
+        headers3 = ["Tipo", "Tipo de pago", "Cliente", "Ref PayPal", "Fecha", "Detalle"]
+        ws3.append(headers3)
+        for c in range(1, len(headers3) + 1):
+            cell = ws3.cell(1, c)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+        # Ordenar por Tipo -> Cliente
+        avisos_orden = sorted(
+            avisos_control,
+            key=lambda a: (a.get("tipo", ""), (a.get("cliente") or "")),
+        )
+        for a in avisos_orden:
+            fecha = a.get("fecha")
+            ws3.append([
+                a.get("tipo", ""),
+                a.get("tipo_pago", ""),
+                a.get("cliente", ""),
+                a.get("ref", ""),
+                fecha,
+                a.get("detalle", ""),
+            ])
+            r = ws3.max_row
+            if fecha:
+                ws3.cell(r, 5).number_format = "d/m/yyyy"
+        anchos3 = [14, 12, 32, 22, 12, 90]
+        for i, w in enumerate(anchos3, start=1):
+            ws3.column_dimensions[get_column_letter(i)].width = w
+        ws3.freeze_panes = "A2"
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(path)
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main(argv) -> int:
+    print("=" * 70)
+    print(" PayPal -> Odoo - Facturacion COMPLETA (Regulares + Upgrades + Migraciones)")
+    print("=" * 70)
+    print()
+
+    if not pf.ENTRADA_DIR.exists():
+        print("ERROR: No existe la carpeta 'entrada/'.")
+        return 2
+
+    extracto_path, historial_path, tabla_path = pf.encontrar_archivos_entrada()
+    errores_iniciales = []
+    if extracto_path is None:
+        errores_iniciales.append("- Extracto_PayPal.csv: no encontrado en entrada/")
+    if historial_path is None:
+        errores_iniciales.append(
+            "- Historial de pagos (.xlsx o .csv): no encontrado en entrada/"
+        )
+    if tabla_path is None:
+        errores_iniciales.append(
+            "- Tabla de promociones.xlsx: no encontrada en entrada/"
+        )
+    if errores_iniciales:
+        print("ERROR: Faltan archivos en 'entrada/':")
+        for e in errores_iniciales:
+            print(f"  {e}")
+        return 2
+
+    productos_path = pf.CATALOGO_DIR / "productos.xlsx"
+    if not productos_path.exists():
+        print(f"ERROR: Falta {productos_path}")
+        return 2
+    lineas_path = pf.CATALOGO_DIR / "lineas.xlsx"
+
+    print("Archivos detectados:")
+    print(f"  Extracto:   {extracto_path.name}")
+    print(f"  Historial:  {historial_path.name}")
+    print(f"  Tabla:      {tabla_path.name}")
+    print(f"  Productos:  {productos_path.name}")
+    if lineas_path.exists():
+        print(f"  Lineas:     (override) {lineas_path.name}")
+    print()
+
+    print("Cargando archivos...")
+    extracto = pf.load_extracto(extracto_path)
+    historial = pf.load_historial(historial_path)
+    tabla = pf.load_tabla_promociones(tabla_path)
+    productos = pf.load_productos(productos_path)
+    overrides = pf.load_lineas_overrides(lineas_path)
+    modulos_validos = set()
+    for ref in productos.keys():
+        base = ref.rsplit("-", 1)[0]
+        if base in pu.PLAN_RANK or base in pu.PLANES_OBSOLETOS:
+            continue
+        modulos_validos.add(base)
+    print(f"  Extracto:   {len(extracto)} filas")
+    print(f"  Historial:  {len(historial)} cobros")
+    print(f"  Tabla:      {len(tabla)} combinaciones de promocion")
+    print(f"  Productos:  {len(productos)} productos")
+    print()
+
+    cobros, omitidos = pf.filtrar_cobros_clientes(extracto)
+    print(f"Cobros del extracto:           {len(extracto)}")
+    print(f"  Pagos de clientes:           {len(cobros)}")
+    print(f"  Omitidos (no facturables):   {len(omitidos)}")
+    print()
+
+    facturas = []
+    conteo_tipo = defaultdict(int)
+    sin_historial = []
+    faltantes_tabla = []
+    avisos_consistencia = []
+    avisos_control = []  # nueva: acumula los 10 checks de control del historial
+
+    # #4 Duplicados en el extracto (chequeo global antes del loop).
+    duplicados = pf.detectar_duplicados_extracto(cobros)
+    for ref_dup, cs in duplicados.items():
+        contacto_dup = (cs[0].get("Contacto") or "").strip()
+        fecha_dup = pf.parse_es_date(cs[0].get("Fecha"))
+        avisos_control.append({
+            "tipo": "Duplicados",
+            "cliente": contacto_dup, "ref": ref_dup, "fecha": fecha_dup,
+            "detalle": f"La referencia PayPal aparece {len(cs)} veces en el extracto",
+        })
+
+    for cobro in cobros:
+        ref = (cobro.get("Referencia") or cobro.get("Referencia ") or "").strip()
+        importe_extracto = pf.parse_es_number(
+            cobro.get("  Importe  ") or cobro.get("Importe")
+        )
+        fecha_cobro = pf.parse_es_date(cobro.get("Fecha"))
+        contacto = (cobro.get("Contacto") or "").strip()
+        descripcion = (cobro.get("Descripción") or "").strip()
+
+        hist = historial.get(ref)
+        if hist is None:
+            sin_historial.append({"ref": ref, "contacto": contacto, "importe": importe_extracto})
+            continue
+
+        tipo = pf.clasificar_tipo_pago(hist)
+        conteo_tipo[tipo] += 1
+
+        # Correr los checks de control (algunos se saltan segun el tipo).
+        avisos_cobro = pf.validar_control_historial(cobro, hist, tipo_pago=tipo)
+
+        inicio_periodo = pf.parse_es_date(hist.get("Inicio de período de pago"))
+        fin_periodo = pf.parse_es_date(hist.get("Fin de período de pago"))
+        frecuencia = pf.determinar_frecuencia(hist)
+
+        # -------- REGULAR --------
+        if tipo == "regular":
+            lineas, errores, faltantes_fac = pf.armar_factura(
+                cobro, hist, tabla, productos, overrides
+            )
+            for fal in faltantes_fac:
+                faltantes_tabla.append({
+                    **fal, "cliente": contacto, "ref": ref,
+                    "frecuencia": frecuencia, "tipo_pago": "regular",
+                })
+            if lineas:
+                ok, calc = pf.validar_importe(lineas, importe_extracto)
+                if not ok:
+                    errores.append(
+                        f"Descuadre de importe: esperado USD {importe_extracto:.2f}, "
+                        f"calculado USD {calc:.2f} (diferencia USD {calc - importe_extracto:+.2f})"
+                    )
+                    factura_temp = {"lineas": lineas, "importe_esperado": importe_extracto}
+                    aviso_susc = pf.detectar_suscripcion_implicita(factura_temp, hist)
+                    if aviso_susc:
+                        errores.append(aviso_susc)
+            dias_plan_nuevo = int(pf.parse_es_number(
+                hist.get("Dias cobrados del plan nuevo") or 0
+            ))
+            terminos = pf.terminos_y_condiciones(
+                inicio_periodo, fin_periodo,
+                frecuencia=frecuencia,
+                dias_plan_nuevo=dias_plan_nuevo,
+                fecha_factura=fecha_cobro,
+            )
+            facturas.append({
+                "tipo": "regular",
+                "contacto": contacto,
+                "referencia_cliente": descripcion,
+                "fecha_factura": fecha_cobro,
+                "fecha_vencimiento": fecha_cobro,
+                "referencia_pago": ref,
+                "terminos": terminos,
+                "inicio_servicio": inicio_periodo,
+                "fin_servicio": fin_periodo,
+                "lineas": lineas,
+                "errores": errores,
+                "importe_esperado": importe_extracto,
+            })
+
+        # -------- UPGRADE --------
+        elif tipo == "upgrade":
+            lineas, errores = pu.armar_factura_upgrade(
+                cobro, hist, productos, modulos_validos
+            )
+            id_dash = hist.get("ID de lacuenta") or hist.get("ID cuenta")
+            facturas.append({
+                "tipo": "upgrade",
+                "contacto": contacto,
+                "referencia_cliente": descripcion,
+                "fecha_factura": fecha_cobro,
+                "fecha_vencimiento": fecha_cobro,
+                "referencia_pago": ref,
+                "terminos": None,  # upgrades llevan terminos por linea
+                "inicio_servicio": inicio_periodo,
+                "fin_servicio": fin_periodo,
+                "lineas": lineas,
+                "errores": errores,
+                "importe_esperado": importe_extracto,
+                "_frecuencia_efectiva": frecuencia,
+                "_id_dash": id_dash,
+            })
+
+        # -------- MIGRACION --------
+        elif tipo == "migracion":
+            lineas, errores, faltantes_fac = pm.armar_factura_migracion(
+                cobro, hist, tabla, productos, overrides
+            )
+            for fal in faltantes_fac:
+                faltantes_tabla.append({
+                    **fal, "cliente": contacto, "ref": ref,
+                    "frecuencia": frecuencia, "tipo_pago": "migracion",
+                })
+            if lineas:
+                ok, calc = pm.validar_importe(lineas, importe_extracto)
+                if not ok:
+                    errores.append(
+                        f"Descuadre de importe: esperado USD {importe_extracto:.2f}, "
+                        f"calculado USD {calc:.2f} (diferencia USD {calc - importe_extracto:+.2f})"
+                    )
+                    factura_temp = {"lineas": lineas, "importe_esperado": importe_extracto}
+                    aviso_susc = pf.detectar_suscripcion_implicita(factura_temp, hist)
+                    if aviso_susc:
+                        errores.append(aviso_susc)
+            dias_plan_nuevo = int(pf.parse_es_number(
+                hist.get("Dias cobrados del plan nuevo") or 0
+            ))
+            terminos = pf.terminos_y_condiciones(
+                inicio_periodo, fin_periodo,
+                frecuencia=frecuencia,
+                dias_plan_nuevo=dias_plan_nuevo,
+                fecha_factura=fecha_cobro,
+            )
+            facturas.append({
+                "tipo": "migracion",
+                "contacto": contacto,
+                "referencia_cliente": descripcion,
+                "fecha_factura": fecha_cobro,
+                "fecha_vencimiento": fecha_cobro,
+                "referencia_pago": ref,
+                "terminos": terminos,
+                "inicio_servicio": inicio_periodo,
+                "fin_servicio": fin_periodo,
+                "lineas": lineas,
+                "errores": errores,
+                "importe_esperado": importe_extracto,
+            })
+        # tipo == "desconocido": lo omitimos silenciosamente (o alertamos aparte)
+
+        # Propagar avisos de control a la factura recien agregada y al
+        # listado global (para escribir la hoja "Avisos de control").
+        if avisos_cobro and facturas and facturas[-1]["referencia_pago"] == ref:
+            for a in avisos_cobro:
+                facturas[-1]["errores"].append(f"[Control] {a}")
+                tipo_aviso = a.split("]")[0].lstrip("[").strip() if "]" in a else "General"
+                avisos_control.append({
+                    "tipo": tipo_aviso,
+                    "cliente": contacto, "ref": ref, "fecha": fecha_cobro,
+                    "tipo_pago": tipo, "detalle": a,
+                })
+
+    # Aplicar deteccion de Suscripcion a los upgrades: el historial siempre
+    # trae mal Suscripcion="No" en upgrades por un bug del sistema, entonces
+    # aca SI aplicamos el 5% automaticamente cuando el ratio lo indica.
+    # (En regulares/migraciones el historial es correcto, no se aplica auto.)
+    for f in facturas:
+        if f["tipo"] != "upgrade" or f["errores"] or not f["lineas"]:
+            continue
+        # Si ya hay descuento aplicado (Sem/Anual) no tocar.
+        if any(l["descuento_pct"] > 0 for l in f["lineas"]):
+            continue
+        calc_bruto = sum(l["dias"] * l["precio_diario"] for l in f["lineas"])
+        if calc_bruto <= 0:
+            continue
+        ratio = f["importe_esperado"] / calc_bruto
+        if not (0.93 <= ratio <= 0.97):
+            continue
+        # Aplicar 5% de Suscripcion en todas las lineas y actualizar la nota
+        # cambiando la letra de frecuencia (M->R).
+        id_dash = f.get("_id_dash")
+        for l in f["lineas"]:
+            l["descuento_pct"] = 5.0
+            nota = l.get("nota_interna", "")
+            # Reemplazar la ultima letra de frecuencia por R.
+            partes = nota.rsplit("/", 1)
+            if len(partes) == 2:
+                l["nota_interna"] = partes[0] + "/R"
+            elif id_dash is not None:
+                l["nota_interna"] = f"SP/{id_dash}/B/R"
+
+    # Post-validar importe de upgrades ya con descuentos aplicados.
+    for f in facturas:
+        if f["tipo"] != "upgrade" or f["errores"] or not f["lineas"]:
+            continue
+        ok, calc = pu.validar_importe(f["lineas"], f["importe_esperado"])
+        if not ok:
+            f["errores"].append(
+                f"Descuadre de importe: esperado USD {f['importe_esperado']:.2f}, "
+                f"calculado USD {calc:.2f} (diferencia USD {calc - f['importe_esperado']:+.2f})"
+            )
+
+    # Ordenar por fecha de cobro (todas mezcladas).
+    facturas.sort(key=lambda f: (
+        f["fecha_factura"] or datetime.max,
+        f["tipo"],
+        f["referencia_pago"] or "",
+    ))
+
+    # Nombre del archivo consolidado.
+    if facturas:
+        meses = Counter(
+            (f["fecha_factura"].month, f["fecha_factura"].year)
+            for f in facturas if f["fecha_factura"] is not None
+        )
+        if meses:
+            (mes, anio), _ = meses.most_common(1)[0]
+            nombre_periodo = f"{pf.MESES_ES[mes - 1]}_{anio}"
+        else:
+            nombre_periodo = "sin_periodo"
+        nombre_archivo = f"Importacion_facturas_completo_{nombre_periodo}.xlsx"
+    else:
+        nombre_archivo = "Importacion_facturas_completo.xlsx"
+    salida = pf.SALIDA_DIR / nombre_archivo
+
+    if salida.exists():
+        try:
+            with open(salida, "a"):
+                pass
+        except PermissionError:
+            print(f"ERROR: No puedo sobrescribir {salida.name}.")
+            print(f"       El archivo esta abierto en Excel. Cerralo y volve a correr.")
+            return 3
+
+    pf.SALIDA_DIR.mkdir(parents=True, exist_ok=True)
+    escribir_xlsx_consolidado(facturas, salida,
+                              faltantes_tabla=faltantes_tabla,
+                              avisos_control=avisos_control)
+
+    # ---- Resumen consola ----
+    print(f"Clasificacion de pagos:")
+    print(f"  Regulares:                   {conteo_tipo['regular']}")
+    print(f"  Upgrades:                    {conteo_tipo['upgrade']}")
+    print(f"  Migraciones:                 {conteo_tipo['migracion']}")
+    print(f"  Desconocido:                 {conteo_tipo['desconocido']}")
+    print(f"  Sin match en historial:      {len(sin_historial)}")
+    print()
+
+    revisar = [f for f in facturas if f["errores"]]
+    ok = [f for f in facturas if not f["errores"]]
+    total_por_tipo = defaultdict(float)
+    for f in ok:
+        subtotal = sum(
+            l["dias"] * l["precio_diario"] * (1 - l["descuento_pct"] / 100)
+            for l in f["lineas"]
+        )
+        total_por_tipo[f["tipo"]] += subtotal
+    total_facturado = sum(total_por_tipo.values())
+    total_revisar = sum(f["importe_esperado"] for f in revisar)
+
+    print(f"Facturas OK:                   {len(ok)}")
+    print(f"Facturas con [REVISAR]:        {len(revisar)}")
+    print()
+    print(f"Total facturado por tipo:")
+    print(f"  Regulares:                   USD {total_por_tipo['regular']:10.2f}")
+    print(f"  Upgrades:                    USD {total_por_tipo['upgrade']:10.2f}")
+    print(f"  Migraciones:                 USD {total_por_tipo['migracion']:10.2f}")
+    print(f"  ------------------------------")
+    print(f"  TOTAL OK:                    USD {total_facturado:10.2f}")
+    print(f"  En [REVISAR]:                USD {total_revisar:10.2f}")
+    print()
+    print("=" * 70)
+    print(f"OK Generado: salida/{nombre_archivo}")
+    print("=" * 70)
+
+    if faltantes_tabla:
+        combos_unicos = set()
+        for fal in faltantes_tabla:
+            combos_unicos.add((
+                (fal.get("codigo") or "").strip(),
+                (fal.get("componente") or "").strip().lower(),
+            ))
+        print()
+        print(f"INFO: {len(combos_unicos)} combinacion(es) de codigo+componente NO estan")
+        print(f"      en la Tabla de promociones. Ver hoja 'Faltantes para Tabla'")
+        print(f"      en el archivo de salida.")
+
+    if avisos_control:
+        por_tipo = Counter(a.get("tipo", "General") for a in avisos_control)
+        print()
+        print(f"INFO: {len(avisos_control)} aviso(s) de control detectados en el historial.")
+        print(f"      Ver hoja 'Avisos de control' en el archivo de salida.")
+        for t, n in por_tipo.most_common():
+            print(f"      - {t}: {n}")
+
+    if sin_historial:
+        print()
+        print(f"AVISO: {len(sin_historial)} cobro(s) sin match en Historial:")
+        for s in sin_historial[:10]:
+            print(f"    - Ref {s['ref']} | {s['contacto']} | USD {s['importe']:.2f}")
+        if len(sin_historial) > 10:
+            print(f"    ... y {len(sin_historial) - 10} mas")
+
+    if revisar:
+        print()
+        print("=" * 70)
+        print(f"ATENCION - {len(revisar)} factura(s) marcada(s) como [REVISAR]:")
+        print("=" * 70)
+        for f in revisar:
+            tipo_str = f["tipo"].upper()
+            print(f"\n  [{tipo_str}] {f['contacto']}  |  Ref: {f['referencia_pago']}  |  USD {f['importe_esperado']:.2f}")
+            for err in f["errores"]:
+                print(f"    - {err}")
+    else:
+        print()
+        print("PERFECTO! No se detectaron problemas. El archivo esta listo para Odoo.")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
+</script>
+
+<!-- productos.xlsx embebido en base64 -->
+<script type="text/plain" id="productos-b64">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</script>
+<script type="text/plain" id="lineas-b64">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</script>
+
+<!-- Pyodide desde CDN -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+
+<script>
+let pyodide = null;
+let pyReady = false; // true recién cuando Python + openpyxl + scripts están listos
+let generatedXlsxBytes = null;
+let generatedFilename = null;
+let uploadedFiles = {};
+
+// Base64 helpers
+function b64decode(s) {
+  const bin = atob(s);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+async function initPyodide() {
+  setStatus('Cargando Python en el navegador... (solo la primera vez, ~10 MB)');
+  pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/' });
+
+  setStatus('Instalando openpyxl...');
+  await pyodide.loadPackage(['micropip']);
+  await pyodide.runPythonAsync(`
+import micropip
+await micropip.install('openpyxl')
+  `);
+
+  setStatus('Preparando entorno...');
+  // Crear directorios en el filesystem virtual
+  pyodide.FS.mkdir('/entrada');
+  pyodide.FS.mkdir('/catalogo');
+  pyodide.FS.mkdir('/salida');
+
+  // Escribir los scripts Python
+  pyodide.FS.writeFile('/paypal_facturacion.py',
+    document.getElementById('py-facturacion').textContent);
+  pyodide.FS.writeFile('/paypal_upgrades.py',
+    document.getElementById('py-upgrades').textContent);
+  pyodide.FS.writeFile('/paypal_migraciones.py',
+    document.getElementById('py-migraciones').textContent);
+  pyodide.FS.writeFile('/paypal_facturacion_completa.py',
+    document.getElementById('py-completa').textContent);
+
+  // Escribir productos.xlsx y lineas.xlsx desde base64
+  const prodBytes = b64decode(document.getElementById('productos-b64').textContent.trim());
+  pyodide.FS.writeFile('/catalogo/productos.xlsx', prodBytes);
+  const linBase64 = document.getElementById('lineas-b64').textContent.trim();
+  if (linBase64) {
+    const linBytes = b64decode(linBase64);
+    pyodide.FS.writeFile('/catalogo/lineas.xlsx', linBytes);
+  }
+
+  // Agregar / al sys.path para que los imports funcionen
+  await pyodide.runPythonAsync(`
+import sys
+if '/' not in sys.path:
+    sys.path.insert(0, '/')
+# Overridear los paths de los scripts para apuntar al virtual FS
+from pathlib import Path
+import paypal_facturacion as pf
+import paypal_upgrades as pu
+import paypal_migraciones as pm
+import paypal_facturacion_completa as pfc
+for mod in (pf, pu, pm, pfc):
+    mod.SCRIPT_DIR = Path('/')
+    mod.ENTRADA_DIR = Path('/entrada')
+    mod.CATALOGO_DIR = Path('/catalogo')
+    mod.SALIDA_DIR = Path('/salida')
+print('OK - Python listo')
+  `);
+
+  pyReady = true;
+  checkReady();
+}
+
+function setStatus(txt, kind) {
+  // kind: 'ok' (✓ verde), 'info' (i azul), 'error' (✗ rojo) o vacío = cargando (spinner girando)
+  const el = document.getElementById('status');
+  const ico = document.getElementById('status-ico');
+  el.className = 'active' + (kind ? ' ' + kind : '');
+  if (kind === 'ok' || kind === 'info' || kind === 'error') {
+    ico.className = 'ico-done';
+    ico.textContent = kind === 'ok' ? '✓' : (kind === 'info' ? 'i' : '✗');
+  } else {
+    ico.className = 'spin';
+    ico.textContent = '';
+  }
+  document.getElementById('status-text').textContent = String(txt).replace(/^[✓✗]\s*/, '');
+}
+function hideStatus() {
+  document.getElementById('status').className = '';
+}
+
+function fmtSize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(2).replace('.',',') + ' KB';
+  return (n/1024/1024).toFixed(2).replace('.',',') + ' MB';
+}
+
+// Wire upload zones
+for (let i = 1; i <= 3; i++) {
+  document.getElementById('file-'+i).addEventListener('change', (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    uploadedFiles[i] = file;
+    const zone = document.getElementById('zone-'+i);
+    zone.classList.add('filled');
+    zone.querySelector('.status').textContent = file.name;
+    const sz = zone.querySelector('.size');
+    if (!sz) {
+      const d = document.createElement('div');
+      d.className = 'size';
+      d.textContent = fmtSize(file.size);
+      zone.appendChild(d);
+    } else {
+      sz.textContent = fmtSize(file.size);
+    }
+    checkReady();
+  });
+}
+
+function checkReady() {
+  const n = [1, 2, 3].filter(i => uploadedFiles[i]).length;
+  document.getElementById('btn-procesar').disabled = !(pyReady && n === 3);
+  if (!pyReady) return; // mientras carga Python no se pisa el mensaje de carga
+  if (n === 3) setStatus('Listo para procesar. Tocá "▶ Procesar facturación".', 'ok');
+  else if (n === 0) setStatus('Python listo. Cargá los 3 archivos y procesá.', 'info');
+  else setStatus('Faltan ' + (3 - n) + (3 - n === 1 ? ' archivo' : ' archivos') + ' por cargar.', 'info');
+}
+
+async function procesar() {
+  if (!pyReady) return;
+  if (!uploadedFiles[1] || !uploadedFiles[2] || !uploadedFiles[3]) {
+    alert('Faltan archivos'); return;
+  }
+  setStatus('Leyendo archivos y ejecutando el procesador...');
+  document.getElementById('btn-procesar').disabled = true;
+  // dejar que el navegador pinte el spinner antes de que Python bloquee el hilo principal
+  await new Promise(r => requestAnimationFrame(() => setTimeout(r, 30)));
+
+  // Limpiar entrada/ y salida/
+  for (const d of ['/entrada', '/salida']) {
+    try {
+      for (const f of pyodide.FS.readdir(d)) {
+        if (f === '.' || f === '..') continue;
+        pyodide.FS.unlink(d + '/' + f);
+      }
+    } catch (e) {}
+  }
+
+  // Subir los 3 archivos al filesystem virtual
+  const extracto = await uploadedFiles[1].arrayBuffer();
+  const historial = await uploadedFiles[2].arrayBuffer();
+  const tabla = await uploadedFiles[3].arrayBuffer();
+  pyodide.FS.writeFile('/entrada/' + uploadedFiles[1].name, new Uint8Array(extracto));
+  pyodide.FS.writeFile('/entrada/' + uploadedFiles[2].name, new Uint8Array(historial));
+  pyodide.FS.writeFile('/entrada/Tabla de promociones.xlsx', new Uint8Array(tabla));
+
+  try {
+    const result = await pyodide.runPythonAsync(`
+import io, json, sys, base64
+from contextlib import redirect_stdout
+from pathlib import Path
+import paypal_facturacion_completa as pfc
+import openpyxl
+
+def _procesar():
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf):
+            rc = pfc.main(['paypal_facturacion_completa.py'])
+    except SystemExit as e:
+        rc = int(e.code or 0)
+    log_text = buf.getvalue()
+
+    xlsxs = sorted(Path('/salida').glob('Importacion_facturas_completo_*.xlsx'),
+                   key=lambda p: p.stat().st_mtime, reverse=True)
+    if not xlsxs:
+        return json.dumps({'ok': False, 'error': 'No se generó XLSX', 'log': log_text})
+
+    xlsx_path = xlsxs[0]
+    wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+    ws = wb['Import Odoo']
+
+    def _is_revisar_fill(cell):
+        try:
+            fill = cell.fill
+            if not fill or not fill.fgColor: return False
+            rgb = fill.fgColor.rgb
+            if not rgb: return False
+            return str(rgb).upper().endswith('F4CCCC')
+        except Exception:
+            return False
+
+    facturas_tmp = {}
+    for r in range(2, ws.max_row+1):
+        orden = ws.cell(r, 1).value
+        if orden is None:
+            continue
+        if orden not in facturas_tmp:
+            facturas_tmp[orden] = {
+                'n': orden,
+                'cliente': ws.cell(r,2).value or ws.cell(r,3).value or '',
+                'ref': ws.cell(r,6).value or '',
+                'terminos': ws.cell(r,7).value or '',
+                'importe': 0.0,
+                'estado': 'OK',
+                'plancitos': [],
+            }
+        f = facturas_tmp[orden]
+        try:
+            dias = float(ws.cell(r,15).value or 0)
+            prec = float(ws.cell(r,17).value or 0)
+            desc = float(ws.cell(r,19).value or 0)
+            f['importe'] += dias * prec * (1 - desc/100.0)
+        except Exception:
+            pass
+        p = ws.cell(r,11).value
+        if p:
+            f['plancitos'].append(str(p))
+        if _is_revisar_fill(ws.cell(r,1)):
+            f['estado'] = 'REVISAR'
+        term = ws.cell(r,7).value
+        if term and str(term).startswith('[REVISAR]'):
+            f['estado'] = 'REVISAR'
+
+    def _infer(terminos, plancitos):
+        t = (terminos or '').lower()
+        if t.startswith('upgrade'):
+            return 'upgrade'
+        planes = {p.rsplit('-',1)[0] for p in plancitos if p}
+        if len(planes & {'pro','adv','ini','ba','st','fu'}) >= 2:
+            return 'migracion'
+        return 'regular'
+
+    LAB = {'regular':'Regular','upgrade':'Upgrade','migracion':'Migración'}
+    CH = {'regular':'chip-regular','upgrade':'chip-upgrade','migracion':'chip-migracion'}
+    facturas = []
+    for o in sorted(facturas_tmp.keys()):
+        f = facturas_tmp[o]
+        tipo = _infer(f['terminos'], f['plancitos'])
+        facturas.append({
+            'n': f['n'],
+            'cliente': str(f['cliente']) if f['cliente'] else '',
+            'ref': str(f['ref']) if f['ref'] else '',
+            'tipo': tipo,
+            'tipoLabel': LAB[tipo],
+            'tipoChip': CH[tipo],
+            'terminos': str(f['terminos']) if f['terminos'] else '',
+            'importe': round(f['importe'],2),
+            'estado': f['estado'],
+        })
+    total_ok = sum(f['importe'] for f in facturas if f['estado']=='OK')
+    total_rev = sum(f['importe'] for f in facturas if f['estado']=='REVISAR')
+    avisos_count = 0
+    if 'Avisos de control' in wb.sheetnames:
+        wsa = wb['Avisos de control']
+        for r in range(2, wsa.max_row+1):
+            if wsa.cell(r,1).value:
+                avisos_count += 1
+
+    with open(xlsx_path, 'rb') as fh:
+        xlsx_bytes = fh.read()
+    xlsx_b64 = base64.b64encode(xlsx_bytes).decode('ascii')
+
+    return json.dumps({
+        'ok': True,
+        'filename': xlsx_path.name,
+        'log': log_text,
+        'facturas': facturas,
+        'stats': {
+            'total': len(facturas),
+            'ok': sum(1 for f in facturas if f['estado']=='OK'),
+            'revisar': sum(1 for f in facturas if f['estado']=='REVISAR'),
+            'total_facturado': round(total_ok, 2),
+            'total_revisar': round(total_rev, 2),
+            'avisos': avisos_count,
+        },
+        'xlsx_b64': xlsx_b64,
+    })
+
+_procesar()
+    `);
+
+    const data = JSON.parse(result);
+    if (!data.ok) {
+      setStatus('✗ ' + (data.error || 'Error'), 'error');
+      console.error(data);
+      return;
+    }
+
+    // Guardar XLSX
+    generatedXlsxBytes = b64decode(data.xlsx_b64);
+    generatedFilename = data.filename;
+
+    // Renderizar resultados
+    const s = data.stats;
+    document.getElementById('r-total').textContent = s.total;
+    document.getElementById('r-facturado').textContent = 'USD ' + s.total_facturado.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('r-revisar').textContent = s.revisar;
+    document.getElementById('r-avisos').textContent = s.avisos;
+    const tbody = document.querySelector('#t-facturas tbody');
+    tbody.innerHTML = data.facturas.map(f => `
+      <tr${f.estado==='REVISAR' ? ' class="revisar"' : ''}>
+        <td>${f.n}</td><td>${f.cliente}</td>
+        <td style="font-family:monospace;font-size:11px;">${f.ref}</td>
+        <td><span class="chip ${f.tipoChip}">${f.tipoLabel}</span></td>
+        <td style="font-size:12.5px;">${f.terminos}</td>
+        <td class="money">USD ${f.importe.toFixed(2).replace('.',',')}</td>
+        <td><span class="chip ${f.estado==='OK'?'chip-ok':'chip-revisar'}">${f.estado}</span></td>
+      </tr>
+    `).join('');
+    document.getElementById('results').classList.add('active');
+    setStatus('✓ Procesamiento completado · ' + s.total + ' facturas · USD ' + s.total_facturado.toLocaleString('es-AR', {minimumFractionDigits:2}), 'ok');
+
+  } catch (err) {
+    console.error(err);
+    setStatus('✗ Error: ' + err.message, 'error');
+  } finally {
+    document.getElementById('btn-procesar').disabled = false;
+  }
+}
+
+function descargar() {
+  if (!generatedXlsxBytes) {
+    alert('Primero procesá una facturación');
+    return;
+  }
+  const blob = new Blob([generatedXlsxBytes], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = generatedFilename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function resetAll() {
+  uploadedFiles = {};
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('file-'+i).value = '';
+    const zone = document.getElementById('zone-'+i);
+    zone.classList.remove('filled');
+    const sz = zone.querySelector('.size');
+    if (sz) sz.remove();
+    const labels = ['Click para seleccionar .csv', 'Click para seleccionar .csv o .xlsx', 'Click para seleccionar .xlsx'];
+    zone.querySelector('.status').textContent = labels[i-1];
+  }
+  document.getElementById('results').classList.remove('active');
+  generatedXlsxBytes = null;
+  generatedFilename = null;
+  hideStatus();
+  checkReady();
+}
+
+// Iniciar Pyodide
+initPyodide().catch(err => {
+  console.error(err);
+  setStatus('✗ No se pudo cargar Python: ' + err.message, 'error');
+});
+</script>
+
+</body>
+</html>
